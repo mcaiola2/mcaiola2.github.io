@@ -1882,7 +1882,7 @@ function fillCaseCard(c) {
   document.getElementById('vitals-bar').innerHTML = c.vitals.map(v=>`<div class="vital"><div class="vital-name">${v.name}</div><div class="vital-val">${v.val}</div></div>`).join('');
   document.getElementById('findings-grid').innerHTML = c.findings.map(f=>`<div class="finding"><div class="finding-label">${f.label}</div><div class="finding-val">${f.val}</div></div>`).join('');
   document.getElementById('murmur-desc').textContent = c.murmur;
-  document.getElementById('audio-name').textContent = c.audioLabel || 'Tap ▶ to auscultate';
+  document.getElementById('audio-name').textContent = 'Tap ▶ to auscultate';
   document.getElementById('audio-play-btn').innerHTML = '&#9654;';
   document.getElementById('audio-play-btn').classList.remove('playing');
   document.getElementById('audio-bars').classList.remove('active');
