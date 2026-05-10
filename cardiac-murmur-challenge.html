@@ -1,0 +1,2267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f0d0c">
+<title>Cardiac Murmur Challenge — URMC Med-Peds</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red:#c0392b; --red-bright:#e74c3c; --cream:#f5f0e8;
+  --dark:#0f0d0c; --mid:#1e1a18; --muted:#3a3330;
+  --text-dim:#8a7d75; --gold:#c9a84c; --green:#2ecc71;
+  --blue:#3498db; --purple:#9b59b6; --orange:#e67e22;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow-x:hidden}
+body{background:var(--dark);color:var(--cream);font-family:'DM Sans',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(192,57,43,0.02) 39px,rgba(192,57,43,0.02) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(192,57,43,0.02) 39px,rgba(192,57,43,0.02) 40px);pointer-events:none;z-index:0}
+#app{position:relative;z-index:1}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+
+/* ── HEADER ── */
+.game-header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(192,57,43,0.3);background:rgba(15,13,12,0.9);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10;flex-wrap:wrap}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:3px;color:var(--red-bright);flex-shrink:0}
+.logo span{color:var(--cream)}
+.progress-bar-outer{flex:1;min-width:60px;height:3px;background:rgba(255,255,255,0.07)}
+.progress-bar-inner{height:100%;background:linear-gradient(90deg,var(--red),var(--red-bright));transition:width .5s ease}
+
+/* ── HUD ── */
+.hud{display:flex;gap:16px;align-items:center;flex-shrink:0}
+.hud-item{display:flex;flex-direction:column;align-items:center;gap:1px}
+.hud-label{font-size:.55rem;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);font-family:'DM Mono',monospace}
+.hud-value{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;color:var(--gold)}
+.heartbeat{width:8px;height:8px;border-radius:50%;background:var(--red-bright);animation:pulse .8s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5}}
+
+/* VS HUD */
+.vs-hud-wrap{display:flex;align-items:center;gap:4px}
+.vs-ph{display:flex;flex-direction:column;align-items:center;gap:1px;padding:2px 8px}
+.vs-ph.p1{border-right:1px solid rgba(255,255,255,0.08)}
+.vs-pname{font-family:'DM Mono',monospace;font-size:.55rem;letter-spacing:1.5px;text-transform:uppercase;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vs-pname.p1{color:var(--blue)}.vs-pname.p2{color:var(--red-bright)}
+.vs-pscore{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px}
+.vs-pscore.p1{color:var(--blue)}.vs-pscore.p2{color:var(--red-bright)}
+.vs-div-text{font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:var(--text-dim);padding:0 4px}
+
+/* Turn banner */
+.turn-banner{padding:6px 16px;font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:2px;text-transform:uppercase;display:none;text-align:center}
+.turn-banner.p1{display:block;background:rgba(52,152,219,.1);border-bottom:1px solid rgba(52,152,219,.3);color:var(--blue)}
+.turn-banner.p2{display:block;background:rgba(192,57,43,.1);border-bottom:1px solid rgba(192,57,43,.3);color:var(--red-bright)}
+
+/* Timer ring */
+.timer-wrap{position:relative;width:48px;height:48px;flex-shrink:0}
+.timer-ring{transform:rotate(-90deg)}
+.timer-ring-bg{fill:none;stroke:rgba(255,255,255,.05);stroke-width:4}
+.timer-ring-fg{fill:none;stroke:var(--red-bright);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset 1s linear,stroke .5s}
+.timer-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1px}
+
+/* ── SPLASH ── */
+#splash{align-items:center;justify-content:center;padding:32px 16px;gap:24px;text-align:center;overflow-y:auto}
+.ecg-line{width:100%;max-width:500px;height:50px;overflow:hidden;position:relative}
+.ecg-line svg{position:absolute;animation:scrollECG 4s linear infinite}
+@keyframes scrollECG{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.splash-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.8rem,9vw,6rem);letter-spacing:5px;line-height:.95;color:var(--cream)}
+.splash-title em{font-style:normal;color:var(--red-bright);display:block}
+.splash-sub{font-size:.8rem;letter-spacing:3px;text-transform:uppercase;color:var(--text-dim);font-family:'DM Mono',monospace}
+.splash-desc{max-width:420px;color:#b0a090;line-height:1.7;font-size:.9rem}
+.instruction-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;max-width:640px;width:100%}
+.instruction-card{background:var(--mid);border:1px solid rgba(255,255,255,.07);padding:16px;text-align:left}
+.ic-icon{font-size:1.4rem;margin-bottom:8px}
+.ic-title{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:2px;margin-bottom:4px}
+.ic-text{font-size:.75rem;color:var(--text-dim);line-height:1.5}
+.mode-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;max-width:600px;width:100%}
+.mode-card{background:var(--mid);border:1px solid rgba(192,57,43,.2);padding:18px;cursor:pointer;transition:all .2s;text-align:left;position:relative;overflow:hidden;-webkit-user-select:none;user-select:none}
+.mode-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--red);transform:scaleX(0);transition:transform .2s}
+.mode-card:hover,.mode-card:active{border-color:var(--red);transform:translateY(-2px)}
+.mode-card:hover::after,.mode-card.selected::after{transform:scaleX(1)}
+.mode-card.selected{border-color:var(--red-bright);background:rgba(192,57,43,.15)}
+.mode-icon{font-size:1.6rem;margin-bottom:8px}
+.mode-name{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;margin-bottom:4px}
+.mode-desc{font-size:.75rem;color:var(--text-dim);line-height:1.4}
+
+/* ── BUTTONS ── */
+.btn-primary{background:var(--red);color:var(--cream);border:none;padding:14px 36px;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:4px;cursor:pointer;transition:all .2s;touch-action:manipulation}
+.btn-primary:hover,.btn-primary:active{background:var(--red-bright)}
+.btn-secondary{background:transparent;color:var(--cream);border:1px solid rgba(245,240,232,.3);padding:10px 24px;font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:2px;cursor:pointer;transition:all .2s;text-transform:uppercase;touch-action:manipulation}
+.btn-secondary:hover,.btn-secondary:active{border-color:var(--gold);color:var(--gold)}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+
+/* ── GAME BODY ── */
+.game-body{flex:1;display:grid;grid-template-columns:1fr 340px;gap:24px;max-width:1100px;width:100%;margin:0 auto;padding:20px 16px;align-items:start}
+@media(max-width:800px){.game-body{grid-template-columns:1fr;gap:16px}}
+
+/* Case card */
+.case-card{background:var(--mid);border:1px solid rgba(192,57,43,.25);padding:20px;position:relative;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.case-num{font-family:'Bebas Neue',sans-serif;font-size:3.5rem;color:rgba(192,57,43,.1);position:absolute;top:12px;right:16px;line-height:1;pointer-events:none}
+.case-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(192,57,43,.15);border:1px solid rgba(192,57,43,.4);padding:5px 12px;font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--red-bright);margin-bottom:14px;flex-wrap:wrap}
+.age-badge{display:inline-block;padding:3px 10px;font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase;border-radius:2px}
+.age-neonate{background:rgba(52,152,219,.2);color:#85c8f0;border:1px solid rgba(52,152,219,.4)}
+.age-infant{background:rgba(155,89,182,.2);color:#c7a0e0;border:1px solid rgba(155,89,182,.4)}
+.age-child{background:rgba(46,204,113,.2);color:#80e0a8;border:1px solid rgba(46,204,113,.4)}
+.age-adult{background:rgba(230,126,34,.2);color:#f0a060;border:1px solid rgba(230,126,34,.4)}
+.age-elderly{background:rgba(192,57,43,.2);color:#e88;border:1px solid rgba(192,57,43,.4)}
+.patient-info{display:flex;gap:14px;align-items:center;margin-bottom:16px}
+.patient-avatar{width:56px;height:56px;border-radius:50%;background:var(--muted);display:flex;align-items:center;justify-content:center;font-size:1.6rem;border:2px solid rgba(192,57,43,.3);flex-shrink:0}
+.patient-name{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px}
+.patient-meta{font-size:.75rem;color:var(--text-dim);font-family:'DM Mono',monospace;margin-top:3px}
+.diff-pips{display:flex;gap:3px;margin-top:5px}
+.diff-pip{width:7px;height:7px;border-radius:1px;background:rgba(255,255,255,.1)}
+.diff-pip.on{background:var(--red-bright)}
+.vitals-bar{display:flex;gap:16px;padding:12px 14px;background:rgba(15,13,12,.5);border-left:3px solid var(--red);margin-bottom:16px;flex-wrap:wrap;gap:12px 20px}
+.vital{display:flex;flex-direction:column;gap:2px}
+.vital-name{font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);font-family:'DM Mono',monospace}
+.vital-val{font-family:'DM Mono',monospace;font-size:.85rem;color:var(--cream)}
+.case-narrative{line-height:1.75;color:#c8bdb5;font-size:.88rem;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:16px}
+.findings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+@media(max-width:400px){.findings-grid{grid-template-columns:1fr}}
+.finding{background:rgba(15,13,12,.4);padding:10px 12px;border:1px solid rgba(255,255,255,.06)}
+.finding-label{font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);font-family:'DM Mono',monospace;margin-bottom:4px}
+.finding-val{font-size:.85rem;color:var(--cream);line-height:1.35}
+
+/* Auscultation box */
+.auscultation-box{background:rgba(192,57,43,.07);border:1px solid rgba(192,57,43,.3);padding:16px}
+.auscultation-title{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:3px;color:var(--red-bright);margin-bottom:12px}
+.ausc-layout{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.chest-wrap{flex-shrink:0;width:160px}
+.chest-wrap svg{width:100%;height:auto;display:block}
+.ausc-info{flex:1;min-width:140px;display:flex;flex-direction:column;gap:8px}
+.spot-row{display:flex;align-items:flex-start;gap:7px;padding:7px 9px;border-left:3px solid var(--red-bright);background:rgba(192,57,43,.08);animation:fadeIn .3s ease}
+.spot-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.spot-name{font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.5px;color:var(--cream);margin-bottom:1px}
+.spot-abbr{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text-dim);letter-spacing:.5px}
+.murmur-desc{font-size:.85rem;line-height:1.65;color:var(--cream);font-style:italic}
+.waveform{height:40px;background:rgba(15,13,12,.6);overflow:hidden;margin-top:6px}
+.waveform svg{width:100%;height:100%}
+
+/* SVG spot styles */
+.ausc-spot-circle{fill:rgba(192,57,43,.12);stroke:rgba(192,57,43,.35);stroke-width:1.5;transition:all .3s}
+.ausc-spot-circle.active-primary{fill:var(--spot-color,var(--red-bright));stroke:var(--spot-color,var(--red-bright));filter:drop-shadow(0 0 6px color-mix(in srgb,var(--spot-color,var(--red-bright)) 70%,transparent))}
+.ausc-spot-circle.active-radiation{fill:transparent;stroke:var(--spot-color,var(--red-bright));stroke-dasharray:3,2;opacity:.7}
+.ausc-spot-pulse{fill:none;stroke:var(--red-bright);stroke-width:1.5;opacity:0}
+.ausc-spot-pulse.active{animation:spotPulse 1.4s ease-out infinite}
+@keyframes spotPulse{0%{r:8;opacity:.7}100%{r:18;opacity:0}}
+.ausc-spot-lbl{font-family:'DM Mono',monospace;font-size:5.5px;fill:rgba(245,240,232,.45);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.ausc-spot-lbl.active{fill:#fff}
+
+/* Audio player */
+.audio-player{display:flex;align-items:center;gap:10px;background:rgba(15,13,12,.7);border:1px solid rgba(192,57,43,.4);padding:10px 12px;margin-top:8px}
+.audio-play-btn{width:36px;height:36px;border-radius:50%;background:var(--red);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:white;flex-shrink:0;transition:all .2s;touch-action:manipulation}
+.audio-play-btn:hover,.audio-play-btn:active{background:var(--red-bright);transform:scale(1.08)}
+.audio-play-btn.playing{background:#e67e22;animation:audioGlow .6s ease-in-out infinite alternate}
+@keyframes audioGlow{from{box-shadow:0 0 4px rgba(230,126,34,.4)}to{box-shadow:0 0 14px rgba(230,126,34,.8)}}
+.audio-info{flex:1;min-width:0}
+.audio-label{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--red-bright);margin-bottom:2px}
+.audio-name{font-size:.75rem;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.audio-bars{display:flex;align-items:flex-end;gap:2px;height:20px}
+.audio-bar{width:3px;background:var(--red-bright);border-radius:1px;opacity:.25}
+.audio-bars.active .audio-bar{opacity:1;animation:barBounce .5s ease-in-out infinite alternate}
+.audio-bar:nth-child(1){animation-delay:0s}.audio-bar:nth-child(2){animation-delay:.1s}.audio-bar:nth-child(3){animation-delay:.05s}.audio-bar:nth-child(4){animation-delay:.15s}.audio-bar:nth-child(5){animation-delay:.08s}
+@keyframes barBounce{from{height:3px}to{height:16px}}
+.audio-stop-btn{background:transparent;border:1px solid rgba(255,255,255,.12);color:var(--text-dim);width:26px;height:26px;cursor:pointer;font-size:.65rem;display:flex;align-items:center;justify-content:center;transition:all .2s;touch-action:manipulation}
+.audio-stop-btn:hover,.audio-stop-btn:active{border-color:var(--red);color:var(--red-bright)}
+
+/* ── ANSWER PANEL ── */
+.answer-panel{display:flex;flex-direction:column;gap:12px}
+.answer-title-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.answer-section-title{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:3px;color:var(--text-dim);border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:8px;flex:1}
+.answered-badge{display:inline-flex;align-items:center;gap:4px;font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:2px}
+.answered-badge.correct-badge{background:rgba(46,204,113,.15);color:var(--green);border:1px solid rgba(46,204,113,.3)}
+.answered-badge.wrong-badge{background:rgba(192,57,43,.15);color:#e88;border:1px solid rgba(192,57,43,.3)}
+.answered-badge.skipped-badge{background:rgba(255,255,255,.05);color:var(--text-dim);border:1px solid rgba(255,255,255,.1)}
+.options-list{display:flex;flex-direction:column;gap:7px}
+.option-btn{background:var(--mid);border:1px solid rgba(255,255,255,.08);color:var(--cream);padding:12px 14px;text-align:left;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;font-size:.87rem;line-height:1.4;width:100%;touch-action:manipulation}
+.option-btn:hover:not(.revealed):not(.correct):not(.wrong){border-color:var(--gold);background:rgba(201,168,76,.08)}
+.option-btn.correct{border-color:var(--green);background:rgba(46,204,113,.15);color:var(--green)}
+.option-btn.wrong{border-color:var(--red);background:rgba(192,57,43,.15);color:#e88}
+.option-btn.revealed{cursor:pointer;opacity:.75}
+.option-btn.revealed:hover,.option-btn.revealed:active{opacity:1;border-color:var(--gold);background:rgba(201,168,76,.08);color:var(--cream)}
+.option-btn.correct.revealed,.option-btn.correct.revealed:hover{opacity:1;border-color:var(--green);background:rgba(46,204,113,.15);color:var(--green)}
+.option-btn.peeked{border-color:var(--gold)!important;background:rgba(201,168,76,.1)!important;color:var(--gold)!important;opacity:1!important}
+.option-letter{display:inline-block;width:20px;height:20px;background:rgba(255,255,255,.08);text-align:center;line-height:20px;font-family:'DM Mono',monospace;font-size:.7rem;margin-right:8px;flex-shrink:0}
+.correct .option-letter{background:rgba(46,204,113,.3)}.wrong .option-letter{background:rgba(192,57,43,.3)}.peeked .option-letter{background:rgba(201,168,76,.25)}
+
+/* Feedback */
+.feedback-box{display:none;padding:16px;border-left:3px solid var(--green);background:rgba(46,204,113,.07);animation:slideIn .3s ease}
+.feedback-box.wrong-fb{border-color:var(--red);background:rgba(192,57,43,.07)}
+.feedback-box.visible{display:block}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.feedback-result{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:3px;margin-bottom:8px}
+.feedback-result.correct-text{color:var(--green)}.feedback-result.wrong-text{color:var(--red-bright)}
+.feedback-explanation{font-size:.82rem;line-height:1.7;color:#b0a090}
+.feedback-pearl{margin-top:8px;padding:8px;background:rgba(201,168,76,.1);border-left:2px solid var(--gold);font-size:.78rem;color:var(--gold);line-height:1.6}
+.peek-hint{font-size:.65rem;font-family:'DM Mono',monospace;letter-spacing:1px;color:var(--text-dim);opacity:.7;display:none}
+
+/* Navigation */
+.case-nav{display:flex;gap:7px;align-items:center;margin-top:4px}
+.nav-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:var(--text-dim);padding:8px 12px;font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:1px;cursor:pointer;transition:all .2s;flex:1;text-transform:uppercase;touch-action:manipulation}
+.nav-btn:hover:not(:disabled),.nav-btn:active:not(:disabled){border-color:var(--gold);color:var(--gold)}
+.nav-btn:disabled{opacity:.25;cursor:default}
+.nav-btn.nav-next{background:var(--red);border-color:var(--red);color:var(--cream);font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:3px}
+.nav-btn.nav-next:hover:not(:disabled),.nav-btn.nav-next:active:not(:disabled){background:var(--red-bright);border-color:var(--red-bright);color:var(--cream)}
+.retry-btn{background:transparent;border:1px solid rgba(192,57,43,.4);color:var(--red-bright);padding:8px 12px;font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:1px;cursor:pointer;transition:all .2s;text-transform:uppercase;display:none;touch-action:manipulation}
+.retry-btn:hover,.retry-btn:active{background:rgba(192,57,43,.15);border-color:var(--red-bright)}
+.retry-btn.visible{display:block}
+
+/* ── RESULTS ── */
+#results{align-items:center;justify-content:flex-start;padding:32px 16px;gap:20px;text-align:center;overflow-y:auto}
+.result-score{font-family:'Bebas Neue',sans-serif;font-size:clamp(3.5rem,12vw,8rem);line-height:1;letter-spacing:4px;color:var(--red-bright);text-shadow:0 0 50px rgba(231,76,60,.35)}
+.result-label{font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:3px;text-transform:uppercase;color:var(--text-dim)}
+.result-grade{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:4px;color:var(--gold)}
+.breakdown{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;max-width:500px;width:100%}
+.breakdown-item{background:var(--mid);border:1px solid rgba(255,255,255,.07);padding:16px}
+.breakdown-num{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--cream);letter-spacing:2px}
+.breakdown-lbl{font-size:.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;font-family:'DM Mono',monospace}
+.missed-list{max-width:540px;width:100%;text-align:left}
+.missed-title{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:3px;color:var(--text-dim);border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:8px;margin-bottom:10px}
+.missed-item{padding:10px;background:var(--mid);border-left:3px solid var(--red);margin-bottom:7px;font-size:.82rem;color:#b0a090;line-height:1.5}
+.missed-item strong{color:var(--cream);display:block;margin-bottom:2px}
+
+/* ── VS SETUP ── */
+#vs-setup{align-items:center;justify-content:flex-start;padding:32px 16px;gap:20px;text-align:center;overflow-y:auto}
+.vs-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,6vw,3.5rem);letter-spacing:5px;color:var(--cream)}
+.vs-title em{font-style:normal;color:var(--red-bright)}
+.vs-players{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;max-width:520px;width:100%}
+.vs-player-box{flex:1;min-width:150px;background:var(--mid);border:1px solid rgba(192,57,43,.3);padding:16px;text-align:center}
+.vs-player-lbl{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.vs-player-lbl.p1{color:var(--blue)}.vs-player-lbl.p2{color:var(--red-bright)}
+.vs-name-input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--cream);padding:8px 12px;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;width:100%;text-align:center;outline:none;transition:border-color .2s;-webkit-appearance:none;border-radius:0}
+.vs-name-input:focus{border-color:var(--gold)}
+.vs-name-input::placeholder{color:var(--text-dim);font-size:.85rem;font-family:'DM Sans',sans-serif}
+.vs-divider{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--red-bright);letter-spacing:4px}
+.vs-timer-opts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.vs-timer-btn{background:var(--mid);border:1px solid rgba(255,255,255,.08);padding:12px 20px;cursor:pointer;transition:all .2s;text-align:center;touch-action:manipulation}
+.vs-timer-btn:hover,.vs-timer-btn:active{border-color:var(--gold)}
+.vs-timer-btn.selected{border-color:var(--red-bright);background:rgba(192,57,43,.15)}
+.vs-timer-btn-name{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:2px;color:var(--cream)}
+.vs-timer-btn-desc{font-size:.7rem;color:var(--text-dim)}
+
+/* Pass overlay */
+#pass-overlay{display:none;position:fixed;inset:0;background:rgba(8,6,5,.97);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:32px 16px;overflow-y:auto}
+#pass-overlay.active{display:flex}
+.pass-icon{font-size:3.5rem}
+.pass-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.8rem,5vw,3rem);letter-spacing:5px;line-height:1.1}
+.pass-title .p1c{color:var(--blue)}.pass-title .p2c{color:var(--red-bright)}
+.pass-sub{font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:1.5px;color:var(--text-dim);max-width:340px;line-height:1.6}
+.pass-scores{display:flex;gap:24px;align-items:center}
+.pass-sb{text-align:center}
+.pass-sb-name{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px}
+.pass-sb-val{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:3px}
+.pass-sb-val.p1{color:var(--blue)}.pass-sb-val.p2{color:var(--red-bright)}
+.pass-vs-sep{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--text-dim)}
+
+/* VS Results */
+#vs-results{align-items:center;justify-content:flex-start;padding:32px 16px;gap:20px;text-align:center;overflow-y:auto}
+.vs-result-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:520px;width:100%}
+@media(max-width:400px){.vs-result-cards{grid-template-columns:1fr}}
+.vs-result-card{background:var(--mid);border:1px solid rgba(255,255,255,.07);padding:20px;text-align:center;position:relative}
+.vs-result-card.winner{border-color:var(--gold);background:rgba(201,168,76,.07)}
+.vs-result-card.winner::before{content:'👑 WINNER';position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--dark);font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:2px;padding:2px 8px;white-space:nowrap}
+.vrc-name{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;margin-bottom:6px}
+.vrc-name.p1{color:var(--blue)}.vrc-name.p2{color:var(--red-bright)}
+.vrc-score{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:4px;color:var(--cream);margin-bottom:4px}
+.vrc-stats{display:flex;flex-direction:column;gap:5px;margin-top:10px;border-top:1px solid rgba(255,255,255,.07);padding-top:10px}
+.vrc-stat{display:flex;justify-content:space-between;font-size:.74rem;color:var(--text-dim);font-family:'DM Mono',monospace}
+.vrc-stat span:last-child{color:var(--cream)}
+
+/* Toast */
+.toast{position:fixed;top:70px;right:16px;background:var(--gold);color:var(--dark);padding:10px 16px;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:2px;z-index:300;transform:translateX(220%);transition:transform .3s;max-width:200px}
+.toast.show{transform:translateX(0)}
+
+/* Utility */
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Pass Overlay -->
+<div id="pass-overlay">
+  <div class="pass-icon">📱</div>
+  <div class="pass-title" id="pass-title">PASS THE DEVICE</div>
+  <p class="pass-sub" id="pass-sub">Hand the device to the next player.</p>
+  <div class="pass-scores" id="pass-scores"></div>
+  <button class="btn-primary" id="pass-ready-btn" onclick="dismissPass()">I'M READY →</button>
+</div>
+
+<!-- ══ SPLASH ══ -->
+<div class="screen active" id="splash">
+  <div class="ecg-line">
+    <svg width="1200" height="50" viewBox="0 0 1200 50">
+      <polyline points="0,25 60,25 70,25 80,8 90,42 100,25 120,25 180,25 190,25 200,8 210,42 220,25 240,25 300,25 310,25 320,8 330,42 340,25 360,25 420,25 430,25 440,8 450,42 460,25 480,25 540,25 550,25 560,8 570,42 580,25 600,25 660,25 670,25 680,8 690,42 700,25 720,25 780,25 790,25 800,8 810,42 820,25 840,25 900,25 910,25 920,8 930,42 940,25 960,25 1020,25 1030,25 1040,8 1050,42 1060,25 1080,25 1140,25 1150,25 1160,8 1170,42 1180,25 1200,25"
+        fill="none" stroke="#c0392b" stroke-width="2" opacity="0.55"/>
+    </svg>
+  </div>
+  <div class="splash-title">CARDIAC<em>MURMUR</em>CHALLENGE</div>
+  <div class="splash-sub">URMC Med-Peds</div>
+  <p class="splash-desc">20 clinical cases spanning neonates to the elderly. Identify murmurs, diagnose conditions, and sharpen your auscultation skills.</p>
+  <div class="instruction-grid">
+    <div class="instruction-card"><div class="ic-icon">🫀</div><div class="ic-title">20 Cases</div><div class="ic-text">Neonatal to elderly, all major murmurs</div></div>
+    <div class="instruction-card"><div class="ic-icon">🔊</div><div class="ic-title">Audio</div><div class="ic-text">Synthesised murmur sounds per case</div></div>
+    <div class="instruction-card"><div class="ic-icon">🩺</div><div class="ic-title">Diagram</div><div class="ic-text">Chest map shows auscultation sites</div></div>
+    <div class="instruction-card"><div class="ic-icon">⚔️</div><div class="ic-title">Versus</div><div class="ic-text">Pass-and-play 2-player mode</div></div>
+  </div>
+  <p style="font-size:.75rem;color:var(--text-dim);font-family:'DM Mono',monospace;letter-spacing:2px">SELECT MODE</p>
+  <div class="mode-cards">
+    <div class="mode-card selected" id="mode-timed" onclick="selectMode('timed')"><div class="mode-icon">⚡</div><div class="mode-name">Timed</div><div class="mode-desc">120s per case. Speed earns bonus pts.</div></div>
+    <div class="mode-card" id="mode-untimed" onclick="selectMode('untimed')"><div class="mode-icon">📖</div><div class="mode-name">Study</div><div class="mode-desc">No time pressure. Learn at your pace.</div></div>
+    <div class="mode-card" id="mode-vs" onclick="selectMode('vs')"><div class="mode-icon">⚔️</div><div class="mode-name">Versus</div><div class="mode-desc">2 players. Pass device. Head-to-head.</div></div>
+  </div>
+  <button class="btn-primary" onclick="startGame()">BEGIN SESSION</button>
+  <p style="font-size:.6rem;color:rgba(138,125,117,.4);font-family:'DM Mono',monospace;letter-spacing:1.5px;margin-top:-12px">Marco Caiola</p>
+</div>
+
+<!-- ══ VS SETUP ══ -->
+<div class="screen" id="vs-setup">
+  <div class="game-header"><div class="logo">CARDIAC <span>RX</span></div></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:20px;padding:28px 16px;overflow-y:auto">
+    <div class="vs-title">HEAD-TO-HEAD <em>VERSUS</em></div>
+    <p class="splash-desc">Each player answers all 20 cases in turn. Highest score wins.</p>
+    <div class="vs-players">
+      <div class="vs-player-box"><div class="vs-player-lbl p1">🔵 Player 1</div><input class="vs-name-input" id="p1name" type="text" maxlength="14" placeholder="Player 1" value="Player 1"></div>
+      <div class="vs-divider">VS</div>
+      <div class="vs-player-box"><div class="vs-player-lbl p2">🔴 Player 2</div><input class="vs-name-input" id="p2name" type="text" maxlength="14" placeholder="Player 2" value="Player 2"></div>
+    </div>
+    <p style="font-size:.75rem;color:var(--text-dim);font-family:'DM Mono',monospace;letter-spacing:2px">TIMER PER CASE</p>
+    <div class="vs-timer-opts">
+      <div class="vs-timer-btn selected" id="vt60" onclick="pickVsTimer(60)"><div class="vs-timer-btn-name">60s</div><div class="vs-timer-btn-desc">Fast</div></div>
+      <div class="vs-timer-btn" id="vt120" onclick="pickVsTimer(120)"><div class="vs-timer-btn-name">120s</div><div class="vs-timer-btn-desc">Standard</div></div>
+      <div class="vs-timer-btn" id="vt0" onclick="pickVsTimer(0)"><div class="vs-timer-btn-name">None</div><div class="vs-timer-btn-desc">Untimed</div></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="beginVs()">START MATCH ⚔️</button>
+      <button class="btn-secondary" onclick="showScreen('splash')">← BACK</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GAME ══ -->
+<div class="screen" id="game">
+  <div class="game-header">
+    <div class="logo">CARDIAC <span>RX</span></div>
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="progress-bar" style="width:0%"></div></div>
+    <!-- Solo HUD -->
+    <div class="hud" id="solo-hud">
+      <div class="hud-item"><div class="hud-label">CASE</div><div class="hud-value" id="hud-case">1/20</div></div>
+      <div class="hud-item"><div class="hud-label">SCORE</div><div class="hud-value" id="hud-score">0</div></div>
+      <div class="hud-item"><div class="hud-label">STREAK</div><div class="hud-value" id="hud-streak">0🔥</div></div>
+      <div class="timer-wrap" id="timer-wrap">
+        <svg class="timer-ring" width="48" height="48" viewBox="0 0 48 48">
+          <circle class="timer-ring-bg" cx="24" cy="24" r="20"/>
+          <circle class="timer-ring-fg" id="timer-fg" cx="24" cy="24" r="20" stroke-dasharray="125.7" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-num" id="timer-num">120</div>
+      </div>
+      <div class="heartbeat"></div>
+    </div>
+    <!-- VS HUD -->
+    <div class="hud hidden" id="vs-hud">
+      <div class="hud-item"><div class="hud-label">CASE</div><div class="hud-value" id="vs-hud-case">1/20</div></div>
+      <div class="vs-hud-wrap">
+        <div class="vs-ph p1"><div class="vs-pname p1" id="vs-p1-hud-name">P1</div><div class="vs-pscore p1" id="vs-p1-hud-score">0</div></div>
+        <div class="vs-div-text">VS</div>
+        <div class="vs-ph p2"><div class="vs-pname p2" id="vs-p2-hud-name">P2</div><div class="vs-pscore p2" id="vs-p2-hud-score">0</div></div>
+      </div>
+      <div class="timer-wrap" id="vs-timer-wrap">
+        <svg class="timer-ring" width="48" height="48" viewBox="0 0 48 48">
+          <circle class="timer-ring-bg" cx="24" cy="24" r="20"/>
+          <circle class="timer-ring-fg" id="vs-timer-fg" cx="24" cy="24" r="20" stroke-dasharray="125.7" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-num" id="vs-timer-num">60</div>
+      </div>
+      <div class="heartbeat"></div>
+    </div>
+  </div>
+  <div class="turn-banner hidden" id="turn-banner"></div>
+
+  <div class="game-body">
+    <!-- Case Card -->
+    <div class="case-card" id="case-card">
+      <div class="case-num" id="case-num">01</div>
+      <div class="case-tag"><span>🏥</span><span id="case-dept">—</span><span class="age-badge" id="age-badge">—</span></div>
+      <div class="patient-info">
+        <div class="patient-avatar" id="patient-avatar">🧑</div>
+        <div>
+          <div class="patient-name" id="patient-name">—</div>
+          <div class="patient-meta" id="patient-meta">—</div>
+          <div style="display:flex;gap:6px;margin-top:5px;align-items:center">
+            <div class="diff-pips" id="diff-pips"><div class="diff-pip on"></div><div class="diff-pip"></div><div class="diff-pip"></div></div>
+            <span style="font-size:.6rem;color:var(--text-dim);font-family:'DM Mono',monospace" id="diff-label">EASY</span>
+          </div>
+        </div>
+      </div>
+      <div class="vitals-bar" id="vitals-bar"></div>
+      <div class="case-narrative" id="case-narrative"></div>
+      <div class="findings-grid" id="findings-grid"></div>
+      <div class="auscultation-box">
+        <div class="auscultation-title">🩺 AUSCULTATION FINDINGS</div>
+        <div class="ausc-layout">
+          <!-- Chest SVG -->
+          <div class="chest-wrap">
+            <svg id="chest-svg" viewBox="0 0 180 220" xmlns="http://www.w3.org/2000/svg">
+              <g opacity=".5">
+                <!-- Neck -->
+                <rect x="77" y="2" width="26" height="20" rx="4" fill="none" stroke="rgba(245,240,232,.22)" stroke-width="1.2"/>
+                <!-- Clavicles -->
+                <path d="M55,28Q43,24,30,26" fill="none" stroke="rgba(245,240,232,.22)" stroke-width="1.4"/>
+                <path d="M125,28Q137,24,150,26" fill="none" stroke="rgba(245,240,232,.22)" stroke-width="1.4"/>
+                <!-- Chest wall outline -->
+                <path d="M55,22Q35,28,28,52L28,158Q28,178,50,183L90,188L130,183Q152,178,152,158L152,52Q145,28,125,22" fill="rgba(245,240,232,.025)" stroke="rgba(245,240,232,.2)" stroke-width="1.5"/>
+                <!-- Sternum (midline dashed) -->
+                <line x1="90" y1="22" x2="90" y2="173" stroke="rgba(245,240,232,.2)" stroke-width="1.2" stroke-dasharray="3,3"/>
+                <!-- Ribs — 5 pairs -->
+                <path d="M90,43Q65,46,52,56" fill="none" stroke="rgba(245,240,232,.14)" stroke-width="1"/>
+                <path d="M90,43Q115,46,128,56" fill="none" stroke="rgba(245,240,232,.14)" stroke-width="1"/>
+                <path d="M90,63Q62,66,48,78" fill="none" stroke="rgba(245,240,232,.14)" stroke-width="1"/>
+                <path d="M90,63Q118,66,132,78" fill="none" stroke="rgba(245,240,232,.14)" stroke-width="1"/>
+                <path d="M90,83Q60,88,46,102" fill="none" stroke="rgba(245,240,232,.1)" stroke-width="1"/>
+                <path d="M90,83Q120,88,134,102" fill="none" stroke="rgba(245,240,232,.1)" stroke-width="1"/>
+                <path d="M90,103Q58,108,44,124" fill="none" stroke="rgba(245,240,232,.08)" stroke-width="1"/>
+                <path d="M90,103Q122,108,136,124" fill="none" stroke="rgba(245,240,232,.08)" stroke-width="1"/>
+                <path d="M90,123Q58,128,46,146" fill="none" stroke="rgba(245,240,232,.08)" stroke-width="1"/>
+                <path d="M90,123Q122,128,134,146" fill="none" stroke="rgba(245,240,232,.08)" stroke-width="1"/>
+                <!-- Heart silhouette (sits left of midline, apex pointing left-inferiorly) -->
+                <path d="M82,72Q72,62,73,75Q75,88,90,100Q105,88,107,75Q108,62,98,72Q93,66,90,72Q87,66,82,72Z" fill="rgba(192,57,43,.12)" stroke="rgba(192,57,43,.3)" stroke-width="1"/>
+                <!-- R/L orientation labels -->
+                <text x="22" y="55" font-size="5.5" fill="rgba(245,240,232,.3)" font-family="monospace" text-anchor="middle">R</text>
+                <text x="158" y="55" font-size="5.5" fill="rgba(245,240,232,.3)" font-family="monospace" text-anchor="middle">L</text>
+                <!-- ICS tick labels on sternum -->
+                <text x="91" y="45" font-size="4.5" fill="rgba(245,240,232,.18)" font-family="monospace">2</text>
+                <text x="91" y="65" font-size="4.5" fill="rgba(245,240,232,.18)" font-family="monospace">3</text>
+                <text x="91" y="85" font-size="4.5" fill="rgba(245,240,232,.18)" font-family="monospace">4</text>
+                <text x="91" y="105" font-size="4.5" fill="rgba(245,240,232,.18)" font-family="monospace">5</text>
+              </g>
+
+              <!--
+                ANATOMICAL COORDINATE KEY (anterior view, patient facing you):
+                  x < 90 = patient's RIGHT side (viewer's left)
+                  x > 90 = patient's LEFT side (viewer's right)
+                  y = 43 → 2nd ICS level
+                  y = 63 → 3rd ICS level
+                  y = 83 → 4th ICS level
+                  y = 98 → 5th ICS / apex level
+
+                CORRECT POSITIONS:
+                  Aortic   (A)  : R 2nd ICS sternal border  → x=72,  y=43  (patient's RIGHT, near sternum)
+                  Pulmonary(P)  : L 2nd ICS sternal border  → x=108, y=43  (patient's LEFT,  near sternum)
+                  Erb's    (E)  : L 3rd ICS sternal border  → x=104, y=63  (patient's LEFT)
+                  Tricuspid(T)  : L 4th ICS sternal border  → x=100, y=83  (patient's LEFT, near sternal edge)
+                  Mitral   (M)  : L 5th ICS midclavicular   → x=118, y=100 (patient's LEFT, lateral)
+                  Infraclavicular(IC): L infraclavicular     → x=122, y=34  (patient's LEFT, below clavicle)
+                  Carotid  (C)  : Neck / carotid radiation   → x=90,  y=11  (midline neck)
+                  Back     (B)  : Interscapular (posterior)  → x=150, y=94  (right margin = "back" indicator)
+              -->
+
+              <!-- Aortic: patient's RIGHT 2nd ICS, just right of sternum on screen (x<90) -->
+              <g id="spot-aortic">
+                <circle class="ausc-spot-pulse" cx="72" cy="43" r="8"/>
+                <circle class="ausc-spot-circle" cx="72" cy="43" r="9"/>
+                <text class="ausc-spot-lbl" x="72" y="43">A</text>
+              </g>
+
+              <!-- Pulmonary: patient's LEFT 2nd ICS, just left of sternum on screen (x>90) -->
+              <g id="spot-pulmonary">
+                <circle class="ausc-spot-pulse" cx="108" cy="43" r="8"/>
+                <circle class="ausc-spot-circle" cx="108" cy="43" r="9"/>
+                <text class="ausc-spot-lbl" x="108" y="43">P</text>
+              </g>
+
+              <!-- Erb's: patient's LEFT 3rd ICS sternal border -->
+              <g id="spot-erbs">
+                <circle class="ausc-spot-pulse" cx="104" cy="63" r="8"/>
+                <circle class="ausc-spot-circle" cx="104" cy="63" r="9"/>
+                <text class="ausc-spot-lbl" x="104" y="63">E</text>
+              </g>
+
+              <!-- Tricuspid: patient's LEFT 4th ICS lower sternal border -->
+              <g id="spot-tricuspid">
+                <circle class="ausc-spot-pulse" cx="100" cy="83" r="8"/>
+                <circle class="ausc-spot-circle" cx="100" cy="83" r="9"/>
+                <text class="ausc-spot-lbl" x="100" y="83">T</text>
+              </g>
+
+              <!-- Mitral/Apex: patient's LEFT 5th ICS midclavicular line -->
+              <g id="spot-mitral">
+                <circle class="ausc-spot-pulse" cx="118" cy="100" r="8"/>
+                <circle class="ausc-spot-circle" cx="118" cy="100" r="9"/>
+                <text class="ausc-spot-lbl" x="118" y="100">M</text>
+              </g>
+
+              <!-- Infraclavicular: patient's LEFT infraclavicular fossa (below left clavicle) -->
+              <g id="spot-infraclavicular">
+                <circle class="ausc-spot-pulse" cx="122" cy="34" r="8"/>
+                <circle class="ausc-spot-circle" cx="122" cy="34" r="9"/>
+                <text class="ausc-spot-lbl" x="122" y="34">IC</text>
+              </g>
+
+              <!-- Carotid: midline neck (radiation to carotids, bilateral) -->
+              <g id="spot-carotid">
+                <circle class="ausc-spot-pulse" cx="90" cy="11" r="8"/>
+                <circle class="ausc-spot-circle" cx="90" cy="11" r="9"/>
+                <text class="ausc-spot-lbl" x="90" y="11">C</text>
+              </g>
+
+              <!-- Back: interscapular / posterior — placed at right margin as indicator -->
+              <g id="spot-back">
+                <circle class="ausc-spot-pulse" cx="150" cy="90" r="8"/>
+                <circle class="ausc-spot-circle" cx="150" cy="90" r="9"/>
+                <text class="ausc-spot-lbl" x="150" y="90">B</text>
+              </g>
+
+              <!-- Legend -->
+              <text x="90" y="208" font-size="5" fill="rgba(245,240,232,.25)" text-anchor="middle" font-family="monospace">ANTERIOR · R=pt right · B=BACK</text>
+            </svg>
+          </div>
+          <!-- Info -->
+          <div class="ausc-info">
+            <div id="ausc-spots-list"></div>
+            <div class="murmur-desc" id="murmur-desc"></div>
+            <div class="waveform"><svg viewBox="0 0 400 40" preserveAspectRatio="none"><polyline id="waveform-line" points="" fill="none" stroke="#c0392b" stroke-width="1.5" opacity=".8"/></svg></div>
+            <div class="audio-player">
+              <button class="audio-play-btn" id="audio-play-btn" onclick="toggleAudio()">&#9654;</button>
+              <div class="audio-info"><div class="audio-label">Murmur Simulation</div><div class="audio-name" id="audio-name">Tap ▶ to auscultate</div></div>
+              <div class="audio-bars" id="audio-bars">
+                <div class="audio-bar" style="height:5px"></div><div class="audio-bar" style="height:10px"></div><div class="audio-bar" style="height:7px"></div><div class="audio-bar" style="height:14px"></div><div class="audio-bar" style="height:9px"></div>
+              </div>
+              <button class="audio-stop-btn" onclick="stopAudio()">&#9632;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Answer Panel -->
+    <div class="answer-panel">
+      <div class="answer-title-row">
+        <div class="answer-section-title">WHAT IS THE DIAGNOSIS?</div>
+        <div id="badge-wrap"></div>
+      </div>
+      <div class="options-list" id="options-list"></div>
+      <div class="feedback-box" id="feedback-box">
+        <div class="feedback-result" id="feedback-result"></div>
+        <div class="feedback-explanation" id="feedback-explanation"></div>
+        <div class="feedback-pearl" id="feedback-pearl"></div>
+      </div>
+      <div class="peek-hint" id="peek-hint">💡 Tap any option to read why it's right or wrong</div>
+      <div class="case-nav">
+        <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">← PREV</button>
+        <button class="retry-btn" id="retry-btn" onclick="retryCase()">↺ RETRY</button>
+        <button class="nav-btn nav-next" id="next-btn" onclick="navigate(1)">NEXT →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RESULTS ══ -->
+<div class="screen" id="results">
+  <div class="game-header"><div class="logo">CARDIAC <span>RX</span></div></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:18px;padding:28px 16px;overflow-y:auto;text-align:center">
+    <div class="result-label">SESSION COMPLETE</div>
+    <div class="result-score" id="res-score">0</div>
+    <div class="result-label">TOTAL SCORE</div>
+    <div class="result-grade" id="res-grade">—</div>
+    <div class="breakdown">
+      <div class="breakdown-item"><div class="breakdown-num" id="res-correct">0</div><div class="breakdown-lbl">Correct</div></div>
+      <div class="breakdown-item"><div class="breakdown-num" id="res-wrong">0</div><div class="breakdown-lbl">Missed</div></div>
+      <div class="breakdown-item"><div class="breakdown-num" id="res-streak">0</div><div class="breakdown-lbl">Best Streak</div></div>
+      <div class="breakdown-item"><div class="breakdown-num" id="res-time">—</div><div class="breakdown-lbl">Avg Time</div></div>
+    </div>
+    <div class="missed-list" id="res-missed"></div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="showScreen('splash')">PLAY AGAIN</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VS RESULTS ══ -->
+<div class="screen" id="vs-results">
+  <div class="game-header"><div class="logo">CARDIAC <span>RX</span></div></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:18px;padding:28px 16px;overflow-y:auto;text-align:center">
+    <div class="result-label">MATCH OVER</div>
+    <div class="result-grade" id="vs-winner-label" style="font-size:2.2rem">—</div>
+    <div class="vs-result-cards" id="vs-result-cards"></div>
+    <div class="missed-list" id="vs-missed"></div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="showScreen('vs-setup')">REMATCH ⚔️</button>
+      <button class="btn-secondary" onclick="showScreen('splash')">MAIN MENU</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- #app -->
+<script>
+const CASES = [
+  {
+    id: 1,
+    ageGroup: 'neonate',
+    ageLabel: 'Neonate',
+    ageBadgeClass: 'age-neonate',
+    avatar: '👶',
+    name: 'Baby Chen',
+    dept: 'Neonatal Unit',
+    meta: 'Age: 2 days · F · Born at 38+4 weeks',
+    difficulty: 1,
+    vitals: [
+      { name: 'HR', val: '168 bpm' },
+      { name: 'SpO2', val: '88% (pre-ductal)' },
+      { name: 'SpO2 (post)', val: '75%' },
+      { name: 'RR', val: '62/min' },
+      { name: 'Temp', val: '36.8°C' },
+    ],
+    narrative: 'A 2-day-old female neonate is noted by the midwife to be cyanotic during feeding. She was born at 38+4 weeks via uncomplicated vaginal delivery. Antenatal scans were reportedly normal. She has significant oxygen desaturation not improving with high-flow oxygen.',
+    findings: [
+      { label: 'Cyanosis', val: 'Central, worsening with crying' },
+      { label: 'Precordium', val: 'Active, right ventricular heave' },
+      { label: 'S2', val: 'Single, loud' },
+      { label: 'Chest X-Ray', val: 'Egg-on-side appearance, narrow mediastinum' },
+    ],
+    murmur: 'No significant murmur. Single loud S2. Soft ejection murmur occasionally heard at the left upper sternal border.',
+    waveformType: 'simple',
+    audioType: 'soft',
+    audioLabel: 'Soft ESM + Single loud S2 (TGA)',
+    heartRate: 168,
+    auscultationSpots: [
+      { id: 'pulmonary', primary: true, radiation: false },
+    ],
+    correct: 1,
+    options: [
+      'Transposition of the Great Arteries (TGA)',
+      'Ventricular Septal Defect (VSD)',
+      'Patent Ductus Arteriosus (PDA)',
+      'Tetralogy of Fallot',
+    ],
+    explanation: 'TGA presents with profound cyanosis from birth that does not improve with oxygen (hyperoxia test). The classic "egg-on-side" CXR with a narrow superior mediastinum (absent thymic shadow + parallel great vessels) is pathognomonic. Cyanosis worsens with crying as pulmonary blood flow falls. A single loud S2 occurs because the pulmonary valve is posterior. Survival depends on mixing via a PDA or ASD — urgent prostaglandin E1 is required.',
+    pearl: '💎 Pearl: The hyperoxia test (100% O₂ for 10 minutes) differentiates cardiac from respiratory cyanosis. In TGA, PaO₂ rarely rises above 15 kPa — a failure of response is cardiac until proven otherwise.',
+    optionExplanations: [
+      '✓ CORRECT — TGA is the #1 cause of cyanosis presenting in the first days of life. The parallel arrangement of the great vessels means deoxygenated blood circulates in a closed systemic loop. The egg-on-side CXR and single loud S2 are classic. Urgent PGE1 keeps the ductus open.',
+      '✗ VSD causes a pansystolic murmur and presents with heart failure (not cyanosis) in weeks to months, not days. A large VSD may cause mild cyanosis only if pulmonary hypertension develops (Eisenmenger). The CXR in VSD shows pulmonary plethora, not egg-on-side.',
+      '✗ PDA causes a continuous machinery murmur. In isolation, PDA does not cause profound cyanosis — it allows mixing. A large PDA may actually improve oxygenation in TGA. No egg-on-side appearance on CXR.',
+      '✗ Tetralogy of Fallot causes cyanosis but typically presents weeks to months later (not day 2) and has a harsh ejection systolic murmur. CXR shows boot-shaped heart with oligaemic fields, not the narrow mediastinum of TGA.',
+    ],
+  },
+  {
+    id: 2,
+    ageGroup: 'neonate',
+    ageLabel: 'Premature Neonate',
+    ageBadgeClass: 'age-neonate',
+    avatar: '👶',
+    name: 'Baby Patel',
+    dept: 'NICU',
+    meta: 'Age: 5 days · M · Born at 28 weeks',
+    difficulty: 1,
+    vitals: [
+      { name: 'HR', val: '155 bpm' },
+      { name: 'SpO2', val: '91% (on CPAP)' },
+      { name: 'BP', val: '42/22 mmHg' },
+      { name: 'RR', val: '58/min' },
+    ],
+    narrative: 'A 28-week premature infant has worsening respiratory distress on day 5 of life. He is on CPAP and requires increasing FiO₂. The nurses note bounding peripheral pulses. He has been struggling to wean from respiratory support.',
+    findings: [
+      { label: 'Pulses', val: 'Bounding, wide pulse pressure' },
+      { label: 'Precordium', val: 'Hyperdynamic, active' },
+      { label: 'Hepatomegaly', val: 'Mild (2cm below costal margin)' },
+      { label: 'CXR', val: 'Cardiomegaly, increased pulmonary vascular markings' },
+    ],
+    murmur: 'Continuous "machinery" murmur, loudest at left infraclavicular region and left upper sternal border. Present throughout systole and diastole.',
+    waveformType: 'continuous',
+    audioType: 'continuous',
+    audioLabel: 'Continuous "Machinery" Murmur (PDA)',
+    heartRate: 155,
+    auscultationSpots: [
+      { id: 'infraclavicular', primary: true, radiation: false },
+      { id: 'pulmonary', primary: false, radiation: true },
+    ],
+    correct: 2,
+    options: [
+      'Ventricular Septal Defect (VSD)',
+      'Patent Ductus Arteriosus (PDA)',
+      'Aortic Coarctation',
+      'Pulmonary Stenosis',
+    ],
+    explanation: 'PDA in premature infants causes a left-to-right shunt from the aorta to pulmonary artery, leading to pulmonary overcirculation. The classic finding is a continuous "machinery" murmur at the left infraclavicular area. Bounding pulses and wide pulse pressure result from diastolic run-off. In prematurity, the ductus fails to close due to low oxygen tension and insufficient smooth muscle. First-line treatment includes fluid restriction; indomethacin or ibuprofen inhibit prostaglandin synthesis to promote closure.',
+    pearl: '💎 Pearl: In term neonates, the ductus closes within 24–72 hours. In premature infants <28 weeks, spontaneous closure may occur but is delayed and unreliable. Surgical ligation is reserved for cases failing medical management.',
+    optionExplanations: [
+      '✗ VSD causes a pansystolic murmur at the lower left sternal border, not a continuous murmur. VSD does not cause bounding pulses or wide pulse pressure. The CXR may show cardiomegaly and plethora but the murmur character is completely different.',
+      '✓ CORRECT — PDA in prematurity causes a continuous "machinery" murmur due to persistent left-to-right flow from aorta to pulmonary artery throughout the cardiac cycle. Bounding pulses and wide pulse pressure are hallmarks of diastolic run-off into the pulmonary circulation.',
+      '✗ Coarctation causes upper limb hypertension, weak femoral pulses, and a systolic murmur — not a continuous murmur. It does not cause bounding pulses. Radio-femoral delay would be present. CXR may show rib notching in older patients.',
+      '✗ Pulmonary stenosis causes an ejection systolic murmur at the left upper sternal border with a possible pulmonary click. It does not produce bounding pulses or a continuous murmur. SpO2 may be mildly reduced in severe cases.',
+    ],
+  },
+  {
+    id: 3,
+    ageGroup: 'infant',
+    ageLabel: 'Infant',
+    ageBadgeClass: 'age-infant',
+    avatar: '🧒',
+    name: 'Lily Thompson',
+    dept: 'Paediatric Cardiology',
+    meta: 'Age: 4 months · F · Referred from PCP',
+    difficulty: 1,
+    vitals: [
+      { name: 'HR', val: '130 bpm' },
+      { name: 'SpO2', val: '98%' },
+      { name: 'RR', val: '42/min' },
+      { name: 'Weight', val: '5.2 kg (9th centile)' },
+    ],
+    narrative: 'A 4-month-old girl is referred with a murmur detected at her routine PCP check-up. The PCP notes she feeds slowly and tires easily. Parents report she sweats profusely during feeds. She was born at term without complications. On examination she has mild tachycardia and tachypnea.',
+    findings: [
+      { label: 'Chest', val: 'Subcostal recession, mild' },
+      { label: 'Apex', val: 'Displaced laterally' },
+      { label: 'S1/S2', val: 'Normal S1, loud P2' },
+      { label: 'CXR', val: 'Cardiomegaly, pulmonary plethora' },
+    ],
+    murmur: 'Harsh pansystolic murmur, grade 4/6, loudest at left lower sternal border. Radiates across the precordium. Associated thrill palpable.',
+    waveformType: 'pansystolic',
+    audioType: 'pansystolic',
+    audioLabel: 'Harsh Pansystolic Murmur (VSD)',
+    heartRate: 130,
+    auscultationSpots: [
+      { id: 'tricuspid', primary: true, radiation: false },
+      { id: 'mitral', primary: false, radiation: true },
+      { id: 'pulmonary', primary: false, radiation: true },
+    ],
+    correct: 1,
+    options: [
+      'Ventricular Septal Defect (VSD)',
+      'Atrial Septal Defect (ASD)',
+      'Aortic Stenosis',
+      'Innocent Flow Murmur',
+    ],
+    explanation: 'A large VSD produces a pansystolic murmur at the lower left sternal border due to turbulent left-to-right flow through the defect. In infants, large VSDs cause heart failure symptoms: sweating, poor feeding, failure to thrive, and tachypnea. A loud P2 suggests raised pulmonary pressure. The displaced apex reflects left ventricular dilation. Small VSDs ("hole in the heart") may be louder paradoxically — Roger\'s murmur — as high-velocity flow through tiny defects creates more turbulence.',
+    pearl: '💎 Pearl: A VSD murmur that gets quieter may not mean improvement — it can signal Eisenmenger syndrome developing, as rising pulmonary pressures reduce the pressure gradient and shunt flow reverses. Always re-evaluate a quietening VSD murmur.',
+    optionExplanations: [
+      '✓ CORRECT — Large VSD causes a harsh pansystolic murmur at the LLSB with a palpable thrill. Volume overload from left-to-right shunting causes heart failure symptoms in infants (poor feeding, sweating, failure to thrive). Loud P2 indicates pulmonary hypertension from chronic overcirculation.',
+      '✗ ASD produces a soft ejection systolic murmur in the pulmonary area (not LLSB) and causes fixed splitting of S2. Heart failure in infancy is uncommon with ASD because the shunt is at lower pressure. Thrills are not typically felt.',
+      '✗ Aortic stenosis causes an ejection systolic murmur (not pansystolic) at the right upper sternal border with carotid radiation. It does not cause a LLSB murmur with thrill. AS in infancy is usually from a bicuspid or unicuspid valve.',
+      '✗ Innocent flow murmurs are soft (grade 1-2/6), mid-systolic, without thrills, and do not cause heart failure symptoms. A grade 4/6 murmur with a thrill, heart failure features, and displaced apex is never innocent.',
+    ],
+  },
+  {
+    id: 4,
+    ageGroup: 'infant',
+    ageLabel: 'Toddler',
+    ageBadgeClass: 'age-infant',
+    avatar: '🧒',
+    name: 'James Williams',
+    dept: 'Paediatric Emergency',
+    meta: 'Age: 18 months · M · Collapse episode',
+    difficulty: 2,
+    vitals: [
+      { name: 'HR', val: '124 bpm' },
+      { name: 'SpO2', val: '84%' },
+      { name: 'RR', val: '38/min' },
+      { name: 'Temp', val: '37.2°C' },
+    ],
+    narrative: 'An 18-month-old boy is brought in after his mother found him blue and unresponsive, squatting in the corner of his bedroom. He recovered spontaneously within 2 minutes. His mother notes episodes where he turns blue when crying. He has not had any formal cardiac assessment.',
+    findings: [
+      { label: 'Build', val: 'Thin, cyanosed peripherally' },
+      { label: 'Clubbing', val: 'Mild digital clubbing' },
+      { label: 'Precordium', val: 'Right ventricular heave' },
+      { label: 'CXR', val: 'Boot-shaped heart, oligaemic lung fields' },
+    ],
+    murmur: 'Harsh ejection systolic murmur, grade 3/6 at left upper sternal border, radiating to lung fields. Murmur shortens or disappears during hypercyanotic spells.',
+    waveformType: 'ejection',
+    audioType: 'ejection',
+    audioLabel: 'Ejection Systolic Murmur — RVOTO (Tetralogy of Fallot)',
+    heartRate: 124,
+    auscultationSpots: [
+      { id: 'pulmonary', primary: true, radiation: false },
+      { id: 'erbs', primary: false, radiation: true },
+    ],
+    correct: 3,
+    options: [
+      'Pulmonary Stenosis',
+      'Atrial Septal Defect (ASD)',
+      'Patent Ductus Arteriosus (PDA)',
+      'Tetralogy of Fallot',
+    ],
+    explanation: 'Tetralogy of Fallot (VSD + RVOTO + overriding aorta + RVH) is the classic cause of cyanotic congenital heart disease presenting in infancy. "Tet spells" are hypercyanotic episodes triggered by crying or agitation, causing infundibular spasm and reduced pulmonary flow. Children instinctively squat (increases SVR, forcing blood through the pulmonary circulation). The boot-shaped heart on CXR results from RVH and absent main pulmonary artery segment. Critical: during a tet spell — oxygen, knees to chest, morphine, propranolol, phenylephrine.',
+    pearl: '💎 Pearl: During a tet spell, the murmur gets SOFTER (or disappears) because pulmonary flow decreases. This paradox helps distinguish it from other conditions. Surgical repair is curative — most children lead normal lives post-repair.',
+    optionExplanations: [
+      '✗ Pulmonary stenosis alone causes an ejection systolic murmur but does not usually cause the cyanotic spells or squatting behavior described here. Isolated PS does not produce a boot-shaped heart. Cyanosis with isolated PS occurs only if severe and associated with right-to-left shunting at atrial level.',
+      '✗ ASD causes a soft pulmonary area murmur with fixed split S2. It does not cause cyanotic spells, squatting, or boot-shaped heart. ASD is a left-to-right shunt and rarely causes cyanosis unless Eisenmenger develops (rare in childhood).',
+      '✗ PDA causes a continuous murmur, not an ejection systolic murmur. It does not cause the squatting behavior or boot-shaped CXR. PDA in isolation does not produce tet spells.',
+      '✓ CORRECT — ToF is defined by four anatomical features. The tet spell is pathognomonic: hypercyanotic episode triggered by agitation, with the murmur disappearing as RVOTO worsens. Squatting increases systemic vascular resistance, reducing the right-to-left shunt. Boot-shaped heart is classic CXR finding.',
+    ],
+  },
+  {
+    id: 5,
+    ageGroup: 'child',
+    ageLabel: 'Child',
+    ageBadgeClass: 'age-child',
+    avatar: '👦',
+    name: 'Sophie Clark',
+    dept: 'General Paediatrics',
+    meta: 'Age: 6 years · F · School screening referral',
+    difficulty: 1,
+    vitals: [
+      { name: 'HR', val: '88 bpm' },
+      { name: 'SpO2', val: '99%' },
+      { name: 'BP', val: '98/62 mmHg' },
+      { name: 'RR', val: '18/min' },
+    ],
+    narrative: 'A 6-year-old girl is referred following a school health check where a murmur was detected. She is completely well, growing normally, and has no symptoms. She is an active child who plays sports without difficulty. Her parents are anxious.',
+    findings: [
+      { label: 'General', val: 'Well, active, no dysmorphic features' },
+      { label: 'Precordium', val: 'No heaves or thrills' },
+      { label: 'S1/S2', val: 'Normal, no additional sounds' },
+      { label: 'Variation', val: 'Murmur disappears when sitting up or during Valsalva' },
+    ],
+    murmur: 'Soft vibratory/musical murmur, grade 2/6, mid-systolic, heard best at lower left sternal border and apex. Low-pitched humming quality. No radiation.',
+    waveformType: 'soft',
+    audioType: 'soft',
+    audioLabel: "Soft Vibratory Murmur — Still's (Innocent)",
+    heartRate: 88,
+    auscultationSpots: [
+      { id: 'tricuspid', primary: true, radiation: false },
+      { id: 'mitral', primary: false, radiation: true },
+    ],
+    correct: 2,
+    options: [
+      'Small VSD',
+      'Pulmonary Stenosis',
+      'Still\'s Murmur (Innocent)',
+      'Hypertrophic Cardiomyopathy',
+    ],
+    explanation: "Still's murmur is the most common innocent murmur in children aged 3–8. It is characterised by a musical, vibratory quality (described as a 'twanging string' or 'seagull'). Crucially, it is louder in supine position and diminishes or disappears on sitting/standing or Valsalva — reduced ventricular volume reduces the vibratory outflow tract sounds. Normal S1, S2, no heaves/thrills, no radiation. No investigation is needed if features are classic. Reassurance is the treatment.",
+    pearl: '💎 Pearl: The 5 S\'s of innocent murmurs: Soft, Short systolic, Small area, Sitting diminishes, Subclavicular. If all 5 are present and there are no red flags (cyanosis, symptoms, radiation, diastolic component), investigation is rarely needed.',
+    optionExplanations: [
+      '✗ A small VSD would produce a pansystolic murmur at the LLSB that does not change significantly with posture. It would not have a musical/vibratory quality. Small VSDs may be loud due to high-velocity flow (Roger\'s murmur), but the character and behaviour are different from Still\'s.',
+      '✗ Pulmonary stenosis causes an ejection systolic murmur at the left upper sternal border with a possible pulmonary click. It does not change with posture in the same way. Moderate-severe PS may have a thrill. An innocent murmur would not radiate or be associated with RV heave.',
+      "✓ CORRECT — Still's murmur is a vibratory, musical, mid-systolic murmur that is position-sensitive. It disappears on standing/Valsalva due to reduced LV volume. Normal cardiac exam otherwise. The most common innocent murmur in school-age children. Reassurance only — no echo needed if classic.",
+      '✗ HOCM causes a dynamic outflow murmur that also changes with posture, but it increases with standing/Valsalva (not decreases). HOCM murmurs are harsher, not musical, and are associated with family history of sudden death or syncope. Echo is mandatory if HOCM is suspected.',
+    ],
+  },
+  {
+    id: 6,
+    ageGroup: 'child',
+    ageLabel: 'Child',
+    ageBadgeClass: 'age-child',
+    avatar: '👦',
+    name: 'Aiden Murphy',
+    dept: 'Paediatric Cardiology',
+    meta: 'Age: 10 years · M · Recurrent chest pain',
+    difficulty: 2,
+    vitals: [
+      { name: 'HR', val: '76 bpm' },
+      { name: 'SpO2', val: '99%' },
+      { name: 'BP Right', val: '128/76 mmHg' },
+      { name: 'BP Left', val: '94/60 mmHg' },
+    ],
+    narrative: 'A 10-year-old boy presents with exertional chest pain and headaches. He has never been investigated before. His father has hypertension. On examination, his femoral pulses are notably weak and delayed compared to his radial pulses. His lower limb blood pressure is significantly lower than upper limb.',
+    findings: [
+      { label: 'Pulses', val: 'Radio-femoral delay, weak femorals' },
+      { label: 'BP differential', val: '34 mmHg (arm > leg)' },
+      { label: 'Rib notching', val: 'Inferior rib margins (CXR)' },
+      { label: 'Signs', val: 'Visible collateral vessels on back' },
+    ],
+    murmur: 'Systolic murmur over the precordium and interscapular region. Collateral vessel bruits heard over the back.',
+    waveformType: 'ejection',
+    audioType: 'ejection',
+    audioLabel: 'Interscapular Systolic Murmur (Coarctation)',
+    heartRate: 76,
+    auscultationSpots: [
+      { id: 'back', primary: true, radiation: false },
+      { id: 'aortic', primary: false, radiation: true },
+    ],
+    correct: 1,
+    options: [
+      'Aortic Stenosis',
+      'Coarctation of the Aorta',
+      'Pulmonary Stenosis',
+      'Hypertension alone',
+    ],
+    explanation: 'Coarctation of the aorta causes a narrowing, most commonly at the aortic isthmus (distal to the left subclavian artery). The hallmark finding is radio-femoral delay and upper limb hypertension with lower limb hypotension. Rib notching on CXR (from dilated intercostal collaterals) is a late but specific sign in older children. Collateral vessels develop over the back. Treatment is balloon angioplasty or surgical repair. It is associated with Turner syndrome and bicuspid aortic valve.',
+    pearl: '💎 Pearl: Always check 4-limb blood pressures in suspected cardiac disease. Coarctation can be missed for years — delayed diagnosis leads to left ventricular hypertrophy, aortic aneurysm, and premature cardiovascular disease.',
+    optionExplanations: [
+      '✗ Aortic stenosis causes an ejection systolic murmur at the right upper sternal border radiating to the carotids, with a slow-rising pulse — but in both arms equally. There would be no radio-femoral delay or arm-leg blood pressure differential. Rib notching does not occur with AS.',
+      '✓ CORRECT — Coarctation causes upper limb hypertension and lower limb hypotension, radio-femoral delay, and collateral vessel development. Rib notching on CXR (inferior rib margins) from enlarged intercostal arteries is a specific late sign. Associated with bicuspid AV and Turner syndrome.',
+      '✗ Pulmonary stenosis causes an ejection systolic murmur at the left upper sternal border with a pulmonary click. It does not produce limb blood pressure differentials, radio-femoral delay, or rib notching. Cyanosis only occurs with severe PS and associated ASD.',
+      '✗ Hypertension alone would not explain radio-femoral delay, arm-leg BP differential of 34 mmHg, rib notching, or visible collateral vessels. These findings require a structural cause — coarctation must be excluded in young patients with upper limb hypertension.',
+    ],
+  },
+  {
+    id: 7,
+    ageGroup: 'child',
+    ageLabel: 'Adolescent',
+    ageBadgeClass: 'age-child',
+    avatar: '🧑',
+    name: 'Emily Davis',
+    dept: 'General Paediatrics',
+    meta: 'Age: 14 years · F · Palpitations & fatigue',
+    difficulty: 2,
+    vitals: [
+      { name: 'HR', val: '82 bpm' },
+      { name: 'SpO2', val: '99%' },
+      { name: 'BP', val: '108/70 mmHg' },
+      { name: 'RR', val: '14/min' },
+    ],
+    narrative: 'A 14-year-old girl presents with a 2-year history of fatigue and exertional dyspnoea. Her parents initially attributed symptoms to puberty and being a "growing girl." She has mild fixed splitting of S2. Her ECG shows a right bundle branch block pattern.',
+    findings: [
+      { label: 'S2 Splitting', val: 'Fixed splitting of S2 (all respiratory phases)' },
+      { label: 'ECG', val: 'Incomplete RBBB, right axis deviation' },
+      { label: 'CXR', val: 'Dilated pulmonary artery, increased lung markings' },
+      { label: 'Thyroid', val: 'Normal' },
+    ],
+    murmur: 'Soft ejection systolic murmur, grade 2/6, at the left upper sternal border (pulmonary area). Fixed splitting of the second heart sound is the key finding.',
+    waveformType: 'soft',
+    audioType: 'soft',
+    audioLabel: 'Pulmonary Flow Murmur + Fixed Split S2 (ASD)',
+    heartRate: 82,
+    auscultationSpots: [
+      { id: 'pulmonary', primary: true, radiation: false },
+      { id: 'erbs', primary: false, radiation: true },
+    ],
+    correct: 1,
+    options: [
+      'Atrial Septal Defect (ASD)',
+      'Ventricular Septal Defect (VSD)',
+      'Pulmonary Stenosis',
+      'Still\'s Murmur',
+    ],
+    explanation: 'ASD causes left-to-right shunting at the atrial level, leading to right heart volume overload. The classic sign is FIXED splitting of S2 — the delay in pulmonary valve closure persists throughout the respiratory cycle because increased right heart flow delays the pulmonic component regardless of respiration. An ejection systolic murmur in the pulmonary area results from increased flow through the pulmonary valve (not from the defect itself). ASD is common in females and often diagnosed late.',
+    pearl: '💎 Pearl: Fixed splitting of S2 = ASD until proven otherwise. Normal S2 splitting widens on inspiration and narrows on expiration. Fixed splitting means this variation is abolished — a reliable bedside sign of ASD.',
+    optionExplanations: [
+      '✓ CORRECT — ASD causes right heart volume overload producing a soft pulmonary flow murmur and, crucially, fixed splitting of S2. The RBBB pattern on ECG reflects RV volume overload. Females are affected more than males. Often diagnosed late in adolescence or adulthood.',
+      '✗ VSD causes a pansystolic murmur at the LLSB — not a soft ejection systolic murmur in the pulmonary area. VSD does not produce fixed S2 splitting. Large VSDs would cause heart failure symptoms in infancy, not subtle symptoms at age 14.',
+      '✗ Pulmonary stenosis causes an ejection systolic murmur at the left upper sternal border with a pulmonary click, and S2 splitting that widens on inspiration (not fixed). PS would not produce RBBB or the dilated pulmonary artery seen here.',
+      "✗ Still's murmur is innocent, soft, positional, and disappears on standing. It does not cause fatigue, exertional dyspnoea, dilated pulmonary artery on CXR, or RBBB on ECG. An innocent murmur has no haemodynamic consequence.",
+    ],
+  },
+  {
+    id: 8,
+    ageGroup: 'adult',
+    ageLabel: 'Young Adult',
+    ageBadgeClass: 'age-adult',
+    avatar: '🧑',
+    name: 'Marcus Johnson',
+    dept: 'Sports Medicine',
+    meta: 'Age: 22 years · M · Pre-participation screen',
+    difficulty: 2,
+    vitals: [
+      { name: 'HR', val: '58 bpm' },
+      { name: 'SpO2', val: '99%' },
+      { name: 'BP', val: '122/74 mmHg' },
+      { name: 'BMI', val: '23' },
+    ],
+    narrative: 'A 22-year-old male athlete presents for a pre-participation cardiac screening before joining a professional sports team. He denies any symptoms but mentions his uncle died suddenly during exercise at age 35. On examination, a late systolic murmur is noted.',
+    findings: [
+      { label: 'S1/S2', val: 'Normal, click heard at apex' },
+      { label: 'Family Hx', val: 'Paternal uncle: sudden death age 35' },
+      { label: 'Murmur Change', val: 'Louder on standing and Valsalva' },
+      { label: 'Murmur Change', val: 'Softer when squatting' },
+    ],
+    murmur: 'Mid-to-late systolic murmur preceded by a click, heard best at the apex and lower left sternal border. Increases in intensity and moves earlier with standing and Valsalva manoeuvre.',
+    waveformType: 'late-systolic',
+    audioType: 'late-systolic',
+    audioLabel: 'Late Systolic Murmur + Click (HOCM)',
+    heartRate: 58,
+    auscultationSpots: [
+      { id: 'mitral', primary: true, radiation: false },
+      { id: 'tricuspid', primary: false, radiation: true },
+    ],
+    correct: 3,
+    options: [
+      'Aortic Regurgitation',
+      'Innocent Flow Murmur',
+      'Aortic Stenosis',
+      'Hypertrophic Obstructive Cardiomyopathy (HOCM)',
+    ],
+    explanation: 'HOCM causes a dynamic outflow tract obstruction. The pathognomonic finding is a murmur that INCREASES with manoeuvres that decrease preload (standing, Valsalva) — reduced filling worsens the obstruction. It DECREASES with squatting or passive leg raise. The family history of sudden cardiac death is a major red flag. Note: MVP also produces a late systolic murmur with click, but in MVP the click moves LATER (not earlier) with reduced preload. HOCM patients require restriction from competitive sport and evaluation for ICD.',
+    pearl: '💎 Pearl: HOCM vs MVP — both can have late systolic murmurs. Key: in HOCM the murmur moves earlier and louder with reduced preload; in MVP the click and murmur move earlier but the murmur duration shortens. Beta-blockers are first-line for HOCM.',
+    optionExplanations: [
+      '✗ Aortic regurgitation causes an early diastolic decrescendo murmur at the left sternal edge — not a late systolic murmur. AR produces peripheral signs: collapsing pulse, Corrigan\'s sign, Quincke\'s pulsation. It does not vary with standing/squatting in this way.',
+      '✗ Innocent flow murmurs are soft, mid-systolic, diminish with standing, and do not have a midsystolic click. They never have a family history of sudden cardiac death and do not warrant restriction from sport. This presentation has too many red flags to be innocent.',
+      '✗ Aortic stenosis causes a crescendo-decrescendo ejection systolic murmur at the right upper sternal border with carotid radiation. AS murmurs do not change dramatically with standing/squatting. A bicuspid AV click occurs early, not mid-systole.',
+      '✓ CORRECT — HOCM causes dynamic LVOTO. Key diagnostic feature: murmur increases with standing and Valsalva (reduced preload worsens obstruction) and decreases with squatting. Family history of SCD is a major red flag requiring full cardiac evaluation including consideration of ICD.',
+    ],
+  },
+  {
+    id: 9,
+    ageGroup: 'adult',
+    ageLabel: 'Adult',
+    ageBadgeClass: 'age-adult',
+    avatar: '👩',
+    name: 'Sarah Okonkwo',
+    dept: 'Rheumatology / Cardiology',
+    meta: 'Age: 32 years · F · Strep throat 3 weeks ago',
+    difficulty: 2,
+    vitals: [
+      { name: 'HR', val: '102 bpm' },
+      { name: 'Temp', val: '38.4°C' },
+      { name: 'BP', val: '106/64 mmHg' },
+      { name: 'CRP', val: '84 mg/L' },
+    ],
+    narrative: 'A 32-year-old woman presents with joint pain, fever, and dyspnoea 3 weeks after a severe sore throat treated with ibuprofen only. She has erythema marginatum on her trunk and subcutaneous nodules. ESR and CRP are markedly elevated. Throat swab was GAS-positive 3 weeks ago.',
+    findings: [
+      { label: 'Joints', val: 'Migratory polyarthritis — knees, ankles' },
+      { label: 'Skin', val: 'Erythema marginatum, subcutaneous nodules' },
+      { label: 'Neuro', val: 'Mild chorea — jerky hand movements' },
+      { label: 'Echo', val: 'Mitral valve thickening, mild MR' },
+    ],
+    murmur: 'High-pitched blowing pansystolic murmur at the apex, radiating to the left axilla. Grade 3/6. Also a soft low-pitched mid-diastolic murmur (Carey Coombs murmur) at the apex.',
+    waveformType: 'pansystolic',
+    audioType: 'pansystolic-mild',
+    audioLabel: 'Apical Pansystolic + Carey Coombs Murmur (ARF)',
+    heartRate: 102,
+    auscultationSpots: [
+      { id: 'mitral', primary: true, radiation: false },
+      { id: 'erbs', primary: false, radiation: true },
+    ],
+    correct: 2,
+    options: [
+      'Mitral Valve Prolapse',
+      'Dilated Cardiomyopathy',
+      'Acute Rheumatic Fever with Carditis',
+      'Infective Endocarditis',
+    ],
+    explanation: 'Acute Rheumatic Fever (ARF) follows Group A Streptococcal pharyngitis 2–4 weeks later. Jones Criteria: the major criteria include carditis (pancarditis), polyarthritis, chorea, erythema marginatum, and subcutaneous nodules. Carditis is the most serious manifestation — mitral regurgitation is the hallmark. The Carey Coombs murmur (mid-diastolic, low-pitched) reflects turbulent flow across an inflamed, thickened mitral valve. Treatment: penicillin (eradicate GAS) + aspirin/steroids for inflammation + secondary prophylaxis for years.',
+    pearl: '💎 Pearl: The Carey Coombs murmur of ARF carditis is a mid-diastolic murmur at the apex — it occurs due to relative mitral stenosis from leaflet oedema. It resolves with treatment and should NOT be confused with established rheumatic mitral stenosis.',
+    optionExplanations: [
+      '✗ Mitral Valve Prolapse causes a mid-systolic click and late systolic murmur. It is not associated with fever, elevated inflammatory markers, skin rashes, or migratory arthritis. MVP does not cause a Carey Coombs mid-diastolic murmur. Post-streptococcal presentation argues strongly against MVP.',
+      '✗ Dilated cardiomyopathy causes global LV dysfunction with MR from annular dilatation. It does not present with migratory arthritis, skin rashes, chorea, or post-streptococcal timing. DCM does not cause a Carey Coombs murmur. This is an inflammatory/immune-mediated syndrome.',
+      '✓ CORRECT — ARF fulfils Jones Criteria: carditis (MR + Carey Coombs murmur), migratory polyarthritis, chorea, erythema marginatum, and subcutaneous nodules — all major criteria. Post-GAS pharyngitis timing confirms diagnosis. Urgent treatment prevents permanent valvular damage.',
+      '✗ Infective endocarditis can cause fever and valve regurgitation but presents differently: subacute onset, Osler\'s nodes (tender), Janeway lesions (non-tender), Roth spots. IE does not cause migratory arthritis, chorea, or erythema marginatum. Blood cultures would grow organisms.',
+    ],
+  },
+  {
+    id: 10,
+    ageGroup: 'adult',
+    ageLabel: 'Adult',
+    ageBadgeClass: 'age-adult',
+    avatar: '🧔',
+    name: 'David Brennan',
+    dept: 'Cardiology',
+    meta: 'Age: 38 years · M · Exertional syncope',
+    difficulty: 2,
+    vitals: [
+      { name: 'HR', val: '68 bpm' },
+      { name: 'BP', val: '148/92 mmHg' },
+      { name: 'SpO2', val: '99%' },
+      { name: 'Pulse', val: 'Slow rising, low volume' },
+    ],
+    narrative: 'A 38-year-old man presents with two episodes of syncope on exertion and increasing exertional dyspnoea over 12 months. He has a known bicuspid aortic valve from childhood. His pulse character is abnormal. He is an office worker who has avoided the PCP for years.',
+    findings: [
+      { label: 'Pulse', val: 'Slow-rising, plateau character (pulsus parvus et tardus)' },
+      { label: 'Apex', val: 'Heaving, sustained, non-displaced' },
+      { label: 'Carotid', val: 'Narrow volume, slow upstroke' },
+      { label: 'S2', val: 'Soft, single (fused A2/P2)' },
+    ],
+    murmur: 'Harsh ejection systolic murmur, grade 4/6, crescendo-decrescendo at the right second intercostal space. Radiates prominently to both carotids. Associated systolic thrill. Ejection click heard early in systole.',
+    waveformType: 'ejection',
+    audioType: 'ejection-harsh',
+    audioLabel: 'Harsh Late-Peaking Ejection Murmur (Severe AS)',
+    heartRate: 68,
+    auscultationSpots: [
+      { id: 'aortic', primary: true, radiation: false },
+      { id: 'carotid', primary: false, radiation: true },
+      { id: 'erbs', primary: false, radiation: true },
+    ],
+    correct: 1,
+    options: [
+      'Severe Aortic Stenosis',
+      'Hypertrophic Cardiomyopathy',
+      'Pulmonary Stenosis',
+      'Mitral Regurgitation',
+    ],
+    explanation: 'Severe aortic stenosis presents with the classic triad: syncope, angina, and dyspnoea. Once symptoms develop, prognosis is poor without intervention (mean survival: 2–3 years with syncope). The murmur is an ejection systolic crescendo-decrescendo at the aortic area, radiating to the carotids. Pulsus parvus et tardus (slow-rising, small-volume pulse) reflects reduced cardiac output across the fixed obstruction. A bicuspid aortic valve is the most common cause of AS in adults under 65. Treatment: TAVI or surgical AVR.',
+    pearl: '💎 Pearl: As AS worsens, the murmur peaks LATER in systole (approaches S2). When AS is severe enough to cause LV failure, flow decreases and the murmur may paradoxically become SOFTER — a quiet murmur in a patient with known AS is worrying.',
+    optionExplanations: [
+      '✓ CORRECT — Severe AS presents with the classic triad of syncope, angina, dyspnoea. The ejection systolic murmur at the right upper sternal border radiating to carotids, combined with pulsus parvus et tardus and a heaving non-displaced apex, is diagnostic. Bicuspid AV is the most common cause under 65.',
+      '✗ HOCM causes a dynamic murmur that increases with Valsalva/standing and decreases with squatting. Pulsus parvus et tardus is not a feature of HOCM. HOCM murmurs typically radiate to the apex, not prominently to the carotids. HOCM often presents with family history.',
+      '✗ Pulmonary stenosis causes an ejection systolic murmur at the left upper sternal border (not right). It does not radiate to the carotids or produce pulsus parvus et tardus. PS syncope is uncommon and PS does not cause the heaving sustained apex of severe AS.',
+      '✗ Mitral regurgitation causes a pansystolic murmur at the apex radiating to the axilla — not an ejection systolic murmur at the RUSB. MR does not cause pulsus parvus et tardus. A heaving non-displaced apex suggests LVH (pressure overload from AS, not volume overload from MR).',
+    ],
+  },
+  {
+    id: 11,
+    ageGroup: 'adult',
+    ageLabel: 'Adult',
+    ageBadgeClass: 'age-adult',
+    avatar: '👩',
+    name: 'Priya Nair',
+    dept: 'Obstetrics / Cardiology',
+    meta: 'Age: 28 years · F · 28 weeks pregnant',
+    difficulty: 2,
+    vitals: [
+      { name: 'HR', val: '96 bpm' },
+      { name: 'BP', val: '104/62 mmHg' },
+      { name: 'SpO2', val: '98%' },
+      { name: 'Hb', val: '10.1 g/dL' },
+    ],
+    narrative: 'A 28-year-old woman, 28 weeks pregnant, is referred by her midwife for a cardiac murmur detected at her booking appointment. She has no cardiac history. She feels well, though slightly breathless on climbing stairs (which she attributes to pregnancy). Her anaemia is under treatment.',
+    findings: [
+      { label: 'S1/S2', val: 'Normal, possible S3 (normal in pregnancy)' },
+      { label: 'Murmur Character', val: 'Disappears on deep inspiration & lying down' },
+      { label: 'Veins', val: 'Venous hum in neck (normal pregnancy finding)' },
+      { label: 'Echo', val: 'Normal LV function, no valve pathology' },
+    ],
+    murmur: 'Soft mid-systolic murmur, grade 1–2/6, at the left sternal edge and pulmonary area. Musical quality. No radiation. Diminishes with lying supine and changes with respiration.',
+    waveformType: 'soft',
+    audioType: 'soft',
+    audioLabel: 'Soft Physiological Flow Murmur (Pregnancy)',
+    heartRate: 96,
+    auscultationSpots: [
+      { id: 'pulmonary', primary: true, radiation: false },
+      { id: 'erbs', primary: false, radiation: true },
+    ],
+    correct: 1,
+    options: [
+      'Atrial Septal Defect',
+      'Physiological (Pregnancy) Murmur',
+      'Mitral Regurgitation',
+      'Pulmonary Stenosis',
+    ],
+    explanation: 'Physiological murmurs occur in up to 80% of pregnancies due to the hyperdynamic circulation — increased blood volume (40–50%), cardiac output, and heart rate reduce blood viscosity and velocity, producing turbulent flow. These murmurs are soft, systolic, left sternal edge, and change with position and respiration. S3 and venous hums are also normal findings in pregnancy. The key is distinguishing from pathological murmurs: diastolic murmurs, loud murmurs with radiation, or associated symptoms should prompt echocardiography.',
+    pearl: '💎 Pearl: Normal pregnancy changes that mimic pathology: flow murmur (80%), S3 (80%), displaced apex (cardiac enlargement), tachycardia, oedema. Pathological red flags in pregnancy: any diastolic murmur, pansystolic murmur grade ≥3, cyanosis, or signs of Eisenmenger syndrome.',
+    optionExplanations: [
+      '✗ ASD would be present before pregnancy, not newly develop because of it. ASD produces fixed S2 splitting, not a positional murmur. A previously undiagnosed ASD is possible, but the murmur disappearing on deep inspiration and normal echo makes this very unlikely in this case.',
+      '✓ CORRECT — Physiological murmurs occur in up to 80% of pregnancies due to hyperdynamic circulation (increased CO, reduced viscosity, volume expansion). Key features: soft, systolic, positional, changes with respiration, and normal echo. No intervention needed — reassurance is appropriate.',
+      '✗ Mitral regurgitation causes a pansystolic murmur at the apex radiating to the axilla. It would not disappear with lying supine or change with respiration in this way. MR on echo would show leaflet pathology and regurgitant jet — this patient\'s echo is normal.',
+      '✗ Pulmonary stenosis causes an ejection systolic murmur at the LUSB with a possible click. It would be present pre-pregnancy and would not change significantly with lying/respiration. Echo would show thickened/domed pulmonary valve with a gradient.',
+    ],
+  },
+  {
+    id: 12,
+    ageGroup: 'adult',
+    ageLabel: 'Adult',
+    ageBadgeClass: 'age-adult',
+    avatar: '🧔',
+    name: 'Kevin Park',
+    dept: 'Emergency Department',
+    meta: 'Age: 45 years · M · IV drug user',
+    difficulty: 3,
+    vitals: [
+      { name: 'HR', val: '118 bpm' },
+      { name: 'Temp', val: '39.2°C' },
+      { name: 'BP', val: '94/56 mmHg' },
+      { name: 'SpO2', val: '94%' },
+    ],
+    narrative: 'A 45-year-old male with a history of intravenous drug use presents with 2 weeks of fevers, rigors, and dyspnoea. He has multiple track marks. His blood cultures taken on admission grow Staphylococcus aureus. He has splinter haemorrhages and Janeway lesions.',
+    findings: [
+      { label: 'Hands', val: 'Splinter haemorrhages, Osler\'s nodes, clubbing' },
+      { label: 'Eyes', val: 'Roth spots on fundoscopy' },
+      { label: 'Feet', val: 'Janeway lesions (palms/soles)' },
+      { label: 'Echo (TOE)', val: 'Tricuspid valve vegetation 1.8cm' },
+    ],
+    murmur: 'Pansystolic murmur loudest at the left lower sternal border, increasing with inspiration (Carvallo\'s sign). Right-sided features: raised JVP, hepatomegaly, peripheral oedema.',
+    waveformType: 'pansystolic',
+    audioType: 'pansystolic',
+    audioLabel: 'Pansystolic Murmur — TR (Infective Endocarditis)',
+    heartRate: 118,
+    auscultationSpots: [
+      { id: 'tricuspid', primary: true, radiation: false },
+      { id: 'erbs', primary: false, radiation: true },
+    ],
+    correct: 2,
+    options: [
+      'Mitral Regurgitation',
+      'Aortic Regurgitation',
+      'Tricuspid Regurgitation (Infective Endocarditis)',
+      'Pulmonary Regurgitation',
+    ],
+    explanation: 'Right-sided infective endocarditis affects the tricuspid valve and is strongly associated with IV drug use (Staph aureus inoculated directly into venous circulation). TR produces a pansystolic murmur at the lower left sternal border that increases on inspiration (Carvallo\'s sign) — inspiration increases right heart filling and flow. Right heart failure features (raised JVP, pulsatile hepatomegaly, peripheral oedema) predominate. Septic pulmonary emboli cause multiple cavitating lung lesions. Treatment: 4–6 weeks of IV antibiotics; surgery for large vegetations or valve failure.',
+    pearl: '💎 Pearl: Carvallo\'s sign — a right-sided murmur increases on inspiration (more venous return to right heart). Left-sided murmurs typically decrease on inspiration. This simple bedside manoeuvre differentiates TR from MR.',
+    optionExplanations: [
+      '✗ Mitral regurgitation causes a pansystolic murmur at the apex radiating to the left axilla. MR murmurs decrease on inspiration (Carvallo\'s sign negative). MR causes left heart failure features (pulmonary oedema, orthopnoea) — not the right heart failure seen here (raised JVP, hepatomegaly).',
+      '✗ Aortic regurgitation causes an early diastolic decrescendo murmur at the left sternal edge — not a pansystolic murmur. AR is associated with peripheral signs (collapsing pulse, Corrigan\'s, Quincke\'s). AR would not explain right heart failure in this context.',
+      '✓ CORRECT — IV drug use → Staph aureus bacteraemia → right-sided IE affecting tricuspid valve. TR produces a pansystolic murmur at LLSB that increases on inspiration (Carvallo\'s sign positive). Right heart failure features + septic pulmonary emboli (cavitating lesions) confirm right-sided IE.',
+      '✗ Pulmonary regurgitation produces an early diastolic murmur at the LUSB (Graham Steell if secondary to PH). It is not a pansystolic murmur. PR alone does not cause the clinical picture described — the septic emboli and Staph bacteraemia point firmly to TR from IE.',
+    ],
+  },
+  {
+    id: 13,
+    ageGroup: 'adult',
+    ageLabel: 'Middle-Aged Adult',
+    ageBadgeClass: 'age-adult',
+    avatar: '👩',
+    name: 'Claire Morrison',
+    dept: 'Cardiology Outpatients',
+    meta: 'Age: 52 years · F · Exertional breathlessness',
+    difficulty: 2,
+    vitals: [
+      { name: 'HR', val: '82 bpm' },
+      { name: 'BP', val: '118/76 mmHg' },
+      { name: 'SpO2', val: '95%' },
+      { name: 'Pulse', val: 'Collapsing quality' },
+    ],
+    narrative: 'A 52-year-old woman presents with progressive exertional dyspnoea and orthopnoea. She had rheumatic fever as a child (growing up in Bangladesh). Her pulse has a distinctive character. She has signs of pulmonary hypertension on examination.',
+    findings: [
+      { label: 'Pulse', val: 'Collapsing ("waterhammer") pulse' },
+      { label: 'Apex', val: 'Hyperdynamic, displaced to 6th ICS, AAL' },
+      { label: 'Corrigan\'s', val: 'Visible carotid pulsations in neck' },
+      { label: 'Quincke\'s', val: 'Visible nail bed capillary pulsation' },
+    ],
+    murmur: 'Early decrescendo diastolic murmur at the left sternal edge (3rd ICS), heard best with patient sitting forward, in full expiration. Austin Flint murmur (soft mid-diastolic) at the apex.',
+    waveformType: 'diastolic',
+    audioType: 'diastolic-early',
+    audioLabel: 'Early Diastolic Decrescendo + Austin Flint (AR)',
+    heartRate: 82,
+    auscultationSpots: [
+      { id: 'erbs', primary: true, radiation: false },
+      { id: 'mitral', primary: false, radiation: true },
+    ],
+    correct: 3,
+    options: [
+      'Mitral Stenosis',
+      'Tricuspid Regurgitation',
+      'Pulmonary Regurgitation',
+      'Aortic Regurgitation',
+    ],
+    explanation: 'Aortic regurgitation causes blood to regurgitate back into the LV during diastole, causing volume overload. The peripheral signs are classic: collapsing (water-hammer) pulse, Corrigan\'s sign, Quincke\'s pulsation, Duroziez\'s sign, Traube\'s pistol-shot femorals. The murmur is an early diastolic decrescendo at the left sternal edge, heard best leaning forward in expiration. The Austin Flint murmur is a functional mid-diastolic murmur at the apex caused by the regurgitant jet vibrating the anterior mitral leaflet, mimicking MS. Cause here: rheumatic.',
+    pearl: '💎 Pearl: Austin Flint vs Mitral Stenosis — both cause mid-diastolic murmurs at the apex. Key differences: Austin Flint has no mitral valve disease on echo, no opening snap, and occurs in the context of AR signs. MS has an opening snap and a loud S1.',
+    optionExplanations: [
+      '✗ Mitral stenosis causes a mid-diastolic rumbling murmur with a loud S1 and opening snap — not an early diastolic murmur at the left sternal edge. MS would not produce a collapsing pulse or Corrigan\'s sign. The Austin Flint murmur in this case can mimic MS but requires AR signs to be present.',
+      '✗ Tricuspid regurgitation causes a pansystolic murmur at the LLSB increasing with inspiration. It does not cause collapsing pulse, Corrigan\'s sign, or an early diastolic decrescendo murmur. TR causes right heart failure features, not the left-sided volume overload picture here.',
+      '✗ Pulmonary regurgitation (Graham Steell) also causes an early diastolic decrescendo murmur but at the left upper sternal border (2nd ICS, not 3rd). It lacks the peripheral AR signs (no collapsing pulse, no Corrigan\'s). PR is secondary to pulmonary hypertension, not rheumatic.',
+      '✓ CORRECT — AR causes early diastolic decrescendo murmur at 3rd LICS, heard best leaning forward in expiration. Rheumatic origin explains the presentation. Peripheral signs (collapsing pulse, Corrigan\'s, Quincke\'s) are classic for AR volume overload. Austin Flint mimics MS but is functional.',
+    ],
+  },
+  {
+    id: 14,
+    ageGroup: 'adult',
+    ageLabel: 'Adult',
+    ageBadgeClass: 'age-adult',
+    avatar: '🧔',
+    name: 'Thomas Nguyen',
+    dept: 'Respiratory / Cardiology',
+    meta: 'Age: 58 years · M · Progressive breathlessness',
+    difficulty: 3,
+    vitals: [
+      { name: 'HR', val: '94 bpm (AF)' },
+      { name: 'BP', val: '108/78 mmHg' },
+      { name: 'SpO2', val: '93%' },
+      { name: 'Pulse', val: 'Irregularly irregular' },
+    ],
+    narrative: 'A 58-year-old man with known rheumatic heart disease presents with worsening breathlessness and haemoptysis. He has been in AF for 2 years. He has a history of rheumatic fever as a child in Vietnam. He has signs of right heart failure and pulmonary hypertension.',
+    findings: [
+      { label: 'Malar Flush', val: 'Present ("mitral facies")' },
+      { label: 'JVP', val: 'Elevated, prominent a-wave absent (AF)' },
+      { label: 'P2', val: 'Loud, palpable' },
+      { label: 'Opening Snap', val: 'Present after S2, close interval' },
+    ],
+    murmur: 'Low-pitched rumbling mid-diastolic murmur with presystolic accentuation (absent in AF). Best heard at the apex with the bell of the stethoscope, patient in left lateral decubitus position. Loud S1.',
+    waveformType: 'diastolic',
+    audioType: 'diastolic-mid-rumble',
+    audioLabel: 'Mid-Diastolic Rumble + Opening Snap (Mitral Stenosis)',
+    heartRate: 94,
+    auscultationSpots: [
+      { id: 'mitral', primary: true, radiation: false },
+    ],
+    correct: 1,
+    options: [
+      'Mitral Stenosis',
+      'Aortic Stenosis',
+      'Mitral Regurgitation',
+      'Tricuspid Stenosis',
+    ],
+    explanation: 'Mitral stenosis is classically rheumatic in origin. Thickened, immobile valve leaflets obstruct left atrial outflow. Key signs: loud S1 (due to forceful closure of a still-mobile but stenotic valve), opening snap (OS) after S2 (earlier OS = more severe), low rumbling mid-diastolic murmur at the apex. Malar flush results from low cardiac output and facial telangiectasia. AF develops due to left atrial dilation. Presystolic accentuation disappears in AF (atrial contraction lost). A2-OS interval shortens as severity increases.',
+    pearl: '💎 Pearl: A2–OS interval inversely correlates with severity: severe MS = short A2-OS (the higher LA pressure opens the mitral valve sooner in diastole). <0.07 seconds suggests severe stenosis. This is a key bedside finding.',
+    optionExplanations: [
+      '✓ CORRECT — Rheumatic MS causes a mid-diastolic rumbling murmur at the apex (heard best with the bell, left lateral decubitus), loud S1, and opening snap. Malar flush and AF are classic associations. Presystolic accentuation is lost in AF. A close A2-OS interval indicates severe stenosis.',
+      '✗ Aortic stenosis causes an ejection systolic murmur at the right upper sternal border — not a mid-diastolic murmur at the apex. AS does not produce a loud S1 or opening snap. This patient is in AF from LA dilation, which is a consequence of MS, not AS.',
+      '✗ Mitral regurgitation causes a pansystolic murmur at the apex radiating to the axilla. MR produces a soft S1 (leaflets fail to coapt) — not a loud S1. There is no opening snap in MR. MR causes LA and LV dilation, but the murmur character is completely different.',
+      '✗ Tricuspid stenosis is rare and causes a mid-diastolic murmur at the lower left sternal border (not apex) that increases on inspiration. TS would cause right heart failure features predominantly. The apex location, loud S1, and opening snap here all point to mitral pathology.',
+    ],
+  },
+  {
+    id: 15,
+    ageGroup: 'adult',
+    ageLabel: 'Adult',
+    ageBadgeClass: 'age-adult',
+    avatar: '👩',
+    name: 'Amara Diallo',
+    dept: 'Cardiology',
+    meta: 'Age: 48 years · F · HIV-positive, shortness of breath',
+    difficulty: 3,
+    vitals: [
+      { name: 'HR', val: '88 bpm' },
+      { name: 'SpO2', val: '96%' },
+      { name: 'BP', val: '102/70 mmHg' },
+      { name: 'JVP', val: 'Elevated 6cm above sternal angle' },
+    ],
+    narrative: 'A 48-year-old HIV-positive woman presents with progressive dyspnoea and peripheral oedema. She has no history of rheumatic fever or IV drug use. She has a loud P2, elevated JVP, and signs of right heart failure. Her echo shows severely dilated RV.',
+    findings: [
+      { label: 'P2', val: 'Loud, palpable in pulmonary area' },
+      { label: 'RV', val: 'Right parasternal heave' },
+      { label: 'JVP', val: 'Elevated with prominent V waves' },
+      { label: 'Echo', val: 'Severely elevated RVSP 78 mmHg, dilated RV' },
+    ],
+    murmur: 'Soft early diastolic decrescendo murmur at the left upper sternal border (pulmonary area), increasing with inspiration. Graham Steell murmur. Associated pansystolic TR murmur at LLSB.',
+    waveformType: 'diastolic',
+    audioType: 'diastolic-early',
+    audioLabel: 'Graham Steell Murmur — Pulmonary Regurgitation (PH)',
+    heartRate: 88,
+    auscultationSpots: [
+      { id: 'pulmonary', primary: true, radiation: false },
+      { id: 'tricuspid', primary: false, radiation: true },
+    ],
+    correct: 1,
+    options: [
+      'Aortic Regurgitation',
+      'Pulmonary Regurgitation (Graham Steell)',
+      'Mitral Regurgitation',
+      'Tricuspid Stenosis',
+    ],
+    explanation: 'The Graham Steell murmur is a pulmonary regurgitation murmur that occurs secondary to pulmonary hypertension. As RV pressure rises, the pulmonary valve cannot close competently, causing regurgitation. It mimics AR (early diastolic decrescendo at left sternal edge) but is located higher (pulmonary area, 2nd LICS) and increases on inspiration. HIV can cause pulmonary arterial hypertension directly. The key is elevated pulmonary pressures on echo — the regurgitation is secondary, not primary valve disease.',
+    pearl: '💎 Pearl: Graham Steell murmur = PR secondary to pulmonary hypertension. To distinguish from AR: Graham Steell is at the left 2nd ICS (not 3rd), increases on inspiration, and lacks the peripheral signs of AR (no collapsing pulse, no Corrigan\'s, no Quincke\'s).',
+    optionExplanations: [
+      '✗ Aortic regurgitation also causes an early diastolic decrescendo murmur at the left sternal edge, but at the 3rd ICS, and is associated with peripheral signs (collapsing pulse, Corrigan\'s, Quincke\'s). AR does not increase on inspiration. This patient has pulmonary hypertension, not AR.',
+      '✓ CORRECT — Graham Steell murmur is PR secondary to pulmonary hypertension (here from HIV-associated PAH). Located at 2nd LICS, increases on inspiration, without AR peripheral signs. Echo confirms severely elevated RVSP. The TR murmur at LLSB is also from RV dilation.',
+      '✗ Mitral regurgitation causes a pansystolic murmur at the apex radiating to the axilla — not an early diastolic decrescendo murmur. MR causes left heart failure. The right heart failure and pulmonary hypertension in this case are the primary drivers, not MR.',
+      '✗ Tricuspid stenosis is very rare and causes a mid-diastolic (not early diastolic) murmur at the LLSB. TS produces elevated JVP with a prominent a-wave, not the severe pulmonary hypertension picture here. TS is usually rheumatic and associated with MS.',
+    ],
+  },
+  {
+    id: 16,
+    ageGroup: 'elderly',
+    ageLabel: 'Elderly',
+    ageBadgeClass: 'age-elderly',
+    avatar: '👴',
+    name: 'George Harrison',
+    dept: 'Cardiology / Geriatrics',
+    meta: 'Age: 76 years · M · Syncope, angina',
+    difficulty: 2,
+    vitals: [
+      { name: 'HR', val: '62 bpm' },
+      { name: 'BP', val: '162/88 mmHg' },
+      { name: 'SpO2', val: '97%' },
+      { name: 'Pulse', val: 'Slow-rising, parvus et tardus' },
+    ],
+    narrative: 'A 76-year-old retired engineer presents with two syncopal episodes, angina on minimal exertion, and breathlessness on climbing stairs. He has a 10-year history of an aortic murmur that has "become louder." He has hypertension and hypercholesterolaemia. His echo shows AVA 0.7 cm².',
+    findings: [
+      { label: 'Murmur', val: 'Grade 4/6, peaking late in systole' },
+      { label: 'Aortic Valve Area', val: '0.7 cm² (severe <1.0 cm²)' },
+      { label: 'Mean gradient', val: '52 mmHg (severe >40 mmHg)' },
+      { label: 'LVH', val: 'Concentric LVH on echo' },
+    ],
+    murmur: 'Harsh, late-peaking ejection systolic murmur grade 4/6, right 2nd intercostal space, radiating to both carotids. Soft A2. No ejection click (calcific/immobile valve). Reversed splitting of S2.',
+    waveformType: 'ejection',
+    audioType: 'ejection-harsh',
+    audioLabel: 'Harsh Late-Peaking ESM — Calcific AS (Elderly)',
+    heartRate: 62,
+    auscultationSpots: [
+      { id: 'aortic', primary: true, radiation: false },
+      { id: 'carotid', primary: false, radiation: true },
+    ],
+    correct: 2,
+    options: [
+      'Hypertrophic Cardiomyopathy',
+      'Aortic Sclerosis',
+      'Severe Calcific Aortic Stenosis',
+      'Pulmonary Stenosis',
+    ],
+    explanation: 'Calcific aortic stenosis is the most common valvular disease in the elderly — degenerative calcification of a normal tricuspid valve. Risk factors mirror atherosclerosis: age, hypertension, hypercholesterolaemia, diabetes. The classic triad (syncope, angina, heart failure) signals severe disease. Unlike aortic sclerosis (murmur without obstruction), calcific AS has a gradient, reduced AVA, and the clinical triad. Reversed splitting of S2 occurs when severe LV outflow obstruction delays A2 so much that P2 precedes A2. TAVI has transformed management in elderly/inoperable patients.',
+    pearl: '💎 Pearl: Aortic Sclerosis vs Stenosis — sclerosis is calcification without obstruction (no gradient, normal S2, no symptoms). Stenosis has obstruction. Distinguish clinically: slow-rising pulse, soft A2, and symptoms = stenosis. An ESM in the elderly without these features = likely sclerosis.',
+    optionExplanations: [
+      '✗ HOCM causes a dynamic murmur that increases with Valsalva and standing. It typically presents in younger patients with family history of SCD. HOCM does not cause reversed S2 splitting or the calcific valve appearance on echo. An AVA of 0.7 cm² with a 52 mmHg gradient is diagnostic of fixed obstruction.',
+      '✗ Aortic sclerosis produces a soft ejection systolic murmur WITHOUT haemodynamic obstruction — no significant gradient, normal AVA, normal pulse, and no symptoms. This patient has severe symptoms, AVA 0.7 cm², and gradient 52 mmHg — this is stenosis, not sclerosis.',
+      '✓ CORRECT — Severe calcific AS (AVA <1.0 cm², mean gradient >40 mmHg) with the classic triad of syncope, angina, and dyspnoea. Late-peaking harsh murmur, pulsus parvus et tardus, soft A2, and reversed S2 splitting all confirm severity. TAVI is first-line in elderly patients.',
+      '✗ Pulmonary stenosis causes a murmur at the left upper sternal border — not the right 2nd ICS. PS does not produce pulsus parvus et tardus, carotid radiation, or reversed S2 splitting. PS is usually congenital and presents earlier in life, not as degenerative disease in the elderly.',
+    ],
+  },
+  {
+    id: 17,
+    ageGroup: 'elderly',
+    ageLabel: 'Elderly',
+    ageBadgeClass: 'age-elderly',
+    avatar: '👵',
+    name: 'Margaret O\'Brien',
+    dept: 'Cardiology',
+    meta: 'Age: 72 years · F · Long-standing mitral valve disease',
+    difficulty: 2,
+    vitals: [
+      { name: 'HR', val: '88 bpm (AF)' },
+      { name: 'BP', val: '112/72 mmHg' },
+      { name: 'SpO2', val: '94%' },
+      { name: 'Echo', val: 'EF 40%, dilated LA & LV' },
+    ],
+    narrative: 'A 72-year-old woman with a 20-year history of "a leaky valve" presents with worsening dyspnoea and a new reduced exercise tolerance. She is in AF. Her LV function has declined on recent echo. She has longstanding mitral valve regurgitation of rheumatic origin.',
+    findings: [
+      { label: 'Apex', val: 'Displaced to 6th ICS, anterior axillary line' },
+      { label: 'S1', val: 'Soft (leaflets fail to coapt)' },
+      { label: 'S3', val: 'Present (volume overload)' },
+      { label: 'AF', val: 'Irregularly irregular rhythm throughout' },
+    ],
+    murmur: 'Harsh pansystolic murmur, grade 4/6 at the apex, radiating to the left axilla and inferior angle of left scapula. High-pitched, blowing quality. Overshadows S1.',
+    waveformType: 'pansystolic',
+    audioType: 'pansystolic',
+    audioLabel: 'Harsh Apical Pansystolic Murmur (Chronic MR)',
+    heartRate: 88,
+    auscultationSpots: [
+      { id: 'mitral', primary: true, radiation: false },
+      { id: 'erbs', primary: false, radiation: true },
+    ],
+    correct: 1,
+    options: [
+      'Mitral Regurgitation (Severe, Chronic)',
+      'Aortic Stenosis',
+      'Tricuspid Regurgitation',
+      'Ventricular Septal Defect',
+    ],
+    explanation: 'Chronic severe MR causes progressive LV volume overload leading to eccentric hypertrophy and eventually LV dysfunction. The pansystolic murmur at the apex radiating to the axilla is the hallmark. Radiation to the axilla (or infrascapular region) helps distinguish MR from AS radiation to the neck. S1 is soft as the leaflets cannot coapt properly. S3 reflects volume overload. AF develops from chronic LA dilation. Once LV EF falls, surgery becomes higher risk — the LV has been "unloaded" by the regurgitation, so EF underestimates true LV function.',
+    pearl: '💎 Pearl: In MR, EF overestimates LV function because the low-pressure LA acts as a relief valve. Therefore, surgery should be considered when EF falls below 60% or LVESD exceeds 40mm — waiting for symptoms may be too late for the LV.',
+    optionExplanations: [
+      '✓ CORRECT — Chronic severe MR causes a harsh pansystolic murmur at the apex radiating to the left axilla. Soft S1 (leaflet non-coaptation), S3 (volume overload), AF (LA dilation), and displaced apex (LV dilation) are all consistent. EF of 40% indicates significant LV dysfunction — surgery indicated.',
+      '✗ Aortic stenosis causes an ejection systolic murmur at the right upper sternal border radiating to the carotids — not a pansystolic murmur at the apex to axilla. AS causes concentric LVH (not eccentric) with a heaving non-displaced apex. S1 would be normal or loud.',
+      '✗ Tricuspid regurgitation causes a pansystolic murmur at the lower left sternal border that increases on inspiration (Carvallo\'s sign positive). TR radiates differently and causes right heart failure features. The apical location with axillary radiation is characteristic of MR, not TR.',
+      '✗ VSD causes a pansystolic murmur at the lower left sternal border, typically in children. Adult VSD presenting for the first time at 72 is very uncommon. The 20-year history of "leaky valve" and rheumatic origin, combined with apical murmur radiating to axilla, is classic chronic rheumatic MR.',
+    ],
+  },
+  {
+    id: 18,
+    ageGroup: 'elderly',
+    ageLabel: 'Elderly',
+    ageBadgeClass: 'age-elderly',
+    avatar: '👴',
+    name: 'Bernard Walsh',
+    dept: 'Emergency Medicine',
+    meta: 'Age: 68 years · M · Acute chest pain',
+    difficulty: 3,
+    vitals: [
+      { name: 'HR', val: '108 bpm' },
+      { name: 'BP', val: '86/54 mmHg' },
+      { name: 'SpO2', val: '91%' },
+      { name: 'ECG', val: 'ST elevation V1–V4, LBBB' },
+    ],
+    narrative: 'A 68-year-old man presents with severe chest pain radiating to his jaw, 3 hours after onset. He is in cardiogenic shock. His ECG shows anterior ST elevation. He has never had cardiac disease before. A new murmur is noted post-primary PCI.',
+    findings: [
+      { label: 'Onset', val: 'New murmur post-MI (4 days)' },
+      { label: 'Haemodynamics', val: 'Cardiogenic shock, not improving post-PCI' },
+      { label: 'Echo', val: 'Flail leaflet posterior MV, severe MR, defect VIV septum' },
+      { label: 'CXR', val: 'Acute pulmonary oedema' },
+    ],
+    murmur: 'New, harsh pansystolic murmur at the apex OR left lower sternal border, post-MI in a shocked patient. Loud, grade 5/6, with a thrill.',
+    waveformType: 'pansystolic',
+    audioType: 'pansystolic',
+    audioLabel: 'New Loud Pansystolic Murmur Post-MI (Mechanical Complication)',
+    heartRate: 108,
+    auscultationSpots: [
+      { id: 'mitral', primary: true, radiation: false },
+      { id: 'tricuspid', primary: false, radiation: true },
+    ],
+    correct: 3,
+    options: [
+      'Pre-existing Mitral Regurgitation',
+      'Aortic Stenosis',
+      'Pulmonary Embolism',
+      'Post-MI Mechanical Complication (Acute MR or VSD)',
+    ],
+    explanation: 'A new loud murmur in a post-MI patient with cardiogenic shock = mechanical complication until proven otherwise. Two catastrophic complications: (1) Acute Mitral Regurgitation — papillary muscle rupture (posterior papillary from RCA territory), causing flail leaflet and severe acute MR; (2) Ventricular Septal Rupture — causes a step-up in O₂ saturation in the RV (detectable on Swan-Ganz), with a harsh pansystolic murmur at the LLSB. Both cause acute pulmonary oedema and cardiogenic shock. Both require urgent surgical repair. Without surgery, mortality approaches 100%.',
+    pearl: '💎 Pearl: Distinguish acute MR from VSD post-MI: acute MR = apical murmur ± radiation to axilla; VSD = murmur at LLSB with palpable thrill and step-up in RV O₂ sat on catheterisation. Swan-Ganz catheter is diagnostic. Both are surgical emergencies.',
+    optionExplanations: [
+      '✗ Pre-existing MR would not present as a NEW murmur post-PCI and would not explain haemodynamic deterioration in a previously well patient. Cardiogenic shock from pre-existing MR would have presented before the MI. A new murmur post-MI always demands urgent investigation for mechanical complications.',
+      '✗ Aortic stenosis does not cause a new murmur post-MI — it is a pre-existing structural disease with a characteristic ejection systolic murmur at the RUSB. AS does not worsen acutely with MI. The new loud pansystolic murmur and cardiogenic shock demand a mechanical explanation.',
+      '✗ Pulmonary embolism causes acute right heart failure but does not cause a new pansystolic murmur. PE may cause a right heart heave, raised JVP, and tachycardia, but the loud pansystolic murmur with a thrill points to a mechanical cardiac complication, not PE.',
+      '✓ CORRECT — New loud pansystolic murmur + cardiogenic shock post-MI = mechanical complication. Either papillary muscle rupture (acute MR) or ventricular septal rupture. Both require emergency surgical repair — untreated mortality is near 100%. TOE and Swan-Ganz catheter are key diagnostic steps.',
+    ],
+  },
+  {
+    id: 19,
+    ageGroup: 'elderly',
+    ageLabel: 'Elderly',
+    ageBadgeClass: 'age-elderly',
+    avatar: '👵',
+    name: 'Edna Clarke',
+    dept: 'Geriatric Medicine',
+    meta: 'Age: 81 years · F · Falls and dizziness',
+    difficulty: 3,
+    vitals: [
+      { name: 'HR', val: '44 bpm' },
+      { name: 'BP', val: '134/84 mmHg' },
+      { name: 'SpO2', val: '97%' },
+      { name: 'Holter', val: 'Complete heart block on 24hr tape' },
+    ],
+    narrative: 'An 81-year-old woman presents with recurrent dizziness, pre-syncope, and two falls over the past 3 months. She has no chest pain. Her pulse is slow and regular. Holter monitoring confirms complete (3rd degree) heart block. Echocardiography shows moderate calcific aortic stenosis and mitral annular calcification.',
+    findings: [
+      { label: 'Rhythm', val: 'Complete heart block: rate 44, dissociated P & QRS' },
+      { label: 'Cannon Waves', val: 'Intermittent cannon A-waves in JVP' },
+      { label: 'S1', val: 'Variable intensity (AV dissociation)' },
+      { label: 'Cause', val: 'Fibrocalcific disease extending to the conduction system' },
+    ],
+    murmur: 'Variable intensity systolic murmur at right sternal edge (calcific AS, moderate). Murmur intensity varies beat-to-beat due to AV dissociation affecting filling and contractility.',
+    waveformType: 'ejection',
+    audioType: 'ejection',
+    audioLabel: 'Variable Ejection Murmur — Calcific AS + CHB (Lev\'s)',
+    heartRate: 44,
+    auscultationSpots: [
+      { id: 'aortic', primary: true, radiation: false },
+      { id: 'carotid', primary: false, radiation: true },
+    ],
+    correct: 1,
+    options: [
+      'Vasovagal Syncope',
+      'Lev\'s Disease with Calcific AS / Complete Heart Block',
+      'HOCM',
+      'Carotid Sinus Hypersensitivity',
+    ],
+    explanation: 'Lev\'s disease is progressive fibrocalcific degeneration of the cardiac conduction system in the elderly, often associated with degenerative calcification extending from the valves (AS, mitral annular calcification) into the His-Purkinje system. This produces varying degrees of heart block. Complete heart block causes Stokes-Adams attacks (sudden loss of consciousness with rapid recovery). Variable murmur intensity is a hallmark of AV dissociation — cannon A-waves occur when atria contract against a closed tricuspid valve. Treatment: permanent pacemaker.',
+    pearl: '💎 Pearl: Variable S1 intensity + cannon A-waves in JVP = AV dissociation (complete heart block or VT). This is a crucial bedside distinction — variable S1 is not found in sinus rhythm and immediately raises the question of dissociated atrial and ventricular activity.',
+    optionExplanations: [
+      '✗ Vasovagal syncope causes transient loss of consciousness with prodromal features (nausea, sweating, light-headedness) and rapid recovery. It does not cause complete heart block, variable S1, or cannon A-waves. Vasovagal is not associated with structural heart disease. Holter monitoring showing CHB excludes vasovagal.',
+      '✓ CORRECT — Lev\'s disease causes fibrocalcific degeneration of the conduction system. In this patient, calcification from AS and mitral annular calcification has extended into the AV node/His-Purkinje system causing CHB. Stokes-Adams attacks (falls, syncope) are the result. Permanent pacemaker is curative.',
+      '✗ HOCM causes dynamic outflow obstruction with a late systolic murmur that increases with Valsalva. HOCM does not cause complete heart block as a primary feature. Cannon A-waves are not a feature of HOCM. HOCM presents in younger patients with family history of SCD.',
+      '✗ Carotid sinus hypersensitivity causes syncope triggered by head turning, shaving, or tight collars. It does not explain Holter-confirmed complete heart block. CSH does not cause cannon A-waves or variable S1 intensity. These ECG and bedside findings require a primary conduction system diagnosis.',
+    ],
+  },
+  {
+    id: 20,
+    ageGroup: 'elderly',
+    ageLabel: 'Elderly',
+    ageBadgeClass: 'age-elderly',
+    avatar: '👴',
+    name: 'Robert Finlay',
+    dept: 'Cardiology',
+    meta: 'Age: 79 years · M · Annual review',
+    difficulty: 1,
+    vitals: [
+      { name: 'HR', val: '72 bpm' },
+      { name: 'BP', val: '156/94 mmHg' },
+      { name: 'SpO2', val: '97%' },
+      { name: 'Cholesterol', val: '6.2 mmol/L' },
+    ],
+    narrative: 'A 79-year-old man attends his annual review. He has hypertension, type 2 diabetes, and hypercholesterolaemia. He is asymptomatic. His PCP has noted a systolic murmur at the right sternal edge for the past 5 years, unchanged. He has no exertional symptoms, no syncope, no dyspnoea.',
+    findings: [
+      { label: 'Pulse', val: 'Normal volume, normal upstroke' },
+      { label: 'S2', val: 'Normal intensity, normal splitting' },
+      { label: 'Murmur gradient', val: 'No significant gradient on echo' },
+      { label: 'Valve area', val: 'Normal (2.8 cm²)' },
+    ],
+    murmur: 'Soft ejection systolic murmur, grade 2/6, at right upper sternal border. Short, early-peaking. No radiation to carotids. No thrill. Normal S2. No symptoms.',
+    waveformType: 'soft',
+    audioType: 'soft',
+    audioLabel: 'Soft Early-Peaking ESM — Aortic Sclerosis',
+    heartRate: 72,
+    auscultationSpots: [
+      { id: 'aortic', primary: true, radiation: false },
+    ],
+    correct: 3,
+    options: [
+      'Severe Aortic Stenosis',
+      'Hypertrophic Cardiomyopathy',
+      'Pulmonary Stenosis',
+      'Aortic Sclerosis',
+    ],
+    explanation: 'Aortic sclerosis is calcification and thickening of the aortic valve without significant obstruction. It is present in ~25% of adults over 65 and does not cause haemodynamic compromise. Unlike AS: normal S2, normal upstroke pulse, no symptoms, no significant gradient (<20mmHg), normal valve area. However, it is an independent predictor of cardiovascular events (atherosclerosis marker). No intervention is required, but risk factor management (statins, BP control) is important. Annual echo surveillance is appropriate to detect progression.',
+    pearl: '💎 Pearl: Aortic sclerosis is NOT benign from a risk perspective — it is an independent marker for cardiovascular mortality (similar to a carotid bruit). Screen for and treat cardiovascular risk factors aggressively. Annual echo surveillance to watch for progression to stenosis.',
+    optionExplanations: [
+      '✗ Severe aortic stenosis would present with the classic triad of syncope, angina, and dyspnoea. AVA would be <1.0 cm² with a mean gradient >40 mmHg, and the pulse would be slow-rising. This patient is completely asymptomatic with normal echo findings — severe AS is excluded.',
+      '✗ HOCM causes a dynamic late systolic murmur at the lower left sternal border that increases with Valsalva. It does not produce a soft, early-peaking murmur at the right sternal border. HOCM would be unusual as a new presentation at 79 without prior history or symptoms.',
+      '✗ Pulmonary stenosis causes a murmur at the left upper sternal border — not the right. PS is congenital and would have been diagnosed in childhood. PS is not a diagnosis to consider in a 79-year-old with cardiovascular risk factors and an incidental right-sided murmur.',
+      '✓ CORRECT — Aortic sclerosis is thickening of the AV without obstruction. Normal S2, normal upstroke pulse, asymptomatic, no significant gradient, normal valve area — all consistent. The murmur is a common incidental finding in elderly patients. Annual echo surveillance and aggressive cardiovascular risk factor management are appropriate.',
+    ],
+  },
+];
+
+
+// ══════════════════════════════════════════
+// SPOT META
+// ══════════════════════════════════════════
+const SPOT_META = {
+  aortic:         { label:'Aortic Area',          abbr:'R 2nd ICS, sternal border',      color:'#e74c3c' },
+  pulmonary:      { label:'Pulmonary Area',        abbr:'L 2nd ICS, sternal border',      color:'#3498db' },
+  erbs:           { label:"Erb's Point",           abbr:'L 3rd ICS, sternal border',      color:'#9b59b6' },
+  tricuspid:      { label:'Tricuspid Area',        abbr:'L 4th–5th ICS, sternal border',  color:'#e67e22' },
+  mitral:         { label:'Mitral / Apex',         abbr:'5th ICS, midclavicular line',    color:'#2ecc71' },
+  infraclavicular:{ label:'Infraclavicular',       abbr:'L infraclavicular fossa',        color:'#1abc9c' },
+  carotid:        { label:'Carotid Radiation',     abbr:'Radiates to neck/carotids',      color:'#e74c3c' },
+  back:           { label:'Interscapular (Back)',  abbr:'Between scapulae, posteriorly',  color:'#f39c12' },
+};
+
+function updateDiagram(spots) {
+  // Reset all
+  Object.keys(SPOT_META).forEach(id => {
+    const g = document.getElementById('spot-' + id);
+    if (!g) return;
+    const circ = g.querySelector('circle:last-of-type');
+    const pulse = g.querySelector('circle:first-of-type');
+    const lbl = g.querySelector('text');
+    if (circ) { circ.removeAttribute('style'); circ.className.baseVal = 'ausc-spot-circle'; }
+    if (pulse) { pulse.style.opacity = '0'; pulse.style.animation = 'none'; }
+    if (lbl) lbl.className.baseVal = 'ausc-spot-lbl';
+  });
+  const listEl = document.getElementById('ausc-spots-list');
+  listEl.innerHTML = '';
+  if (!spots || !spots.length) return;
+  spots.forEach(s => {
+    const m = SPOT_META[s.id]; if (!m) return;
+    const g = document.getElementById('spot-' + s.id);
+    if (g) {
+      const circ = g.querySelector('circle:last-of-type');
+      const pulse = g.querySelector('circle:first-of-type');
+      const lbl = g.querySelector('text');
+      if (circ) {
+        circ.style.fill = s.primary ? m.color : 'transparent';
+        circ.style.stroke = m.color;
+        circ.style.strokeDasharray = s.primary ? 'none' : '3,2';
+        circ.style.opacity = s.primary ? '1' : '.6';
+        circ.style.filter = s.primary ? `drop-shadow(0 0 7px ${m.color}bb)` : '';
+      }
+      if (pulse && s.primary) {
+        pulse.style.stroke = m.color;
+        pulse.style.opacity = '1';
+        pulse.style.animation = 'spotPulse 1.4s ease-out infinite';
+      }
+      if (lbl) lbl.className.baseVal = 'ausc-spot-lbl active';
+    }
+    const div = document.createElement('div');
+    div.className = 'spot-row';
+    div.style.borderLeftColor = m.color;
+    div.style.background = m.color + '12';
+    div.innerHTML = `<div class="spot-dot" style="background:${m.color};opacity:${s.primary?1:.5}"></div><div><div class="spot-name">${s.primary ? m.label : '↗ '+m.label}</div><div class="spot-abbr">${s.primary ? m.abbr : 'Radiation: '+m.abbr}</div></div>`;
+    listEl.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════════
+// AUDIO ENGINE
+// ══════════════════════════════════════════
+let audioCtx = null, audioNodes = [], isPlaying = false;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function stopAudio() {
+  audioNodes.forEach(n => { try { n.stop(); } catch(e){} });
+  audioNodes = []; isPlaying = false;
+  const btn = document.getElementById('audio-play-btn');
+  if (btn) { btn.innerHTML = '&#9654;'; btn.classList.remove('playing'); }
+  const bars = document.getElementById('audio-bars');
+  if (bars) bars.classList.remove('active');
+}
+
+function toggleAudio() {
+  if (isPlaying) { stopAudio(); return; }
+  const c = getCurrentCase();
+  if (!c) return;
+  playMurmur(c.audioType, c.heartRate || 72);
+}
+
+function playMurmur(type, bpm) {
+  stopAudio();
+  const ctx = getAudioCtx();
+  isPlaying = true;
+  const btn = document.getElementById('audio-play-btn');
+  btn.innerHTML = '&#9632;'; btn.classList.add('playing');
+  document.getElementById('audio-bars').classList.add('active');
+  const duration = 8, bi = 60 / bpm;
+  const master = ctx.createGain(); master.gain.value = 0.6; master.connect(ctx.destination);
+  const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 800; lp.Q.value = 0.7; lp.connect(master);
+  const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 180; bp.Q.value = 0.4; bp.connect(lp);
+  const t0 = ctx.currentTime + 0.1, beats = Math.ceil(duration / bi);
+  for (let i = 0; i < beats; i++) {
+    const bt = t0 + i * bi, ss = bt + 0.05, sd = bi * 0.35, ds = ss + sd + 0.04, dd = bi * 0.55;
+    heartSound(ctx, bp, bt, 0.08, 80, 0.18); heartSound(ctx, bp, ss + sd, 0.05, 120, 0.12);
+    switch(type) {
+      case 'pansystolic': noise(ctx, bp, ss, sd, 300, 0.55, 'flat'); break;
+      case 'ejection': noise(ctx, bp, ss, sd, 250, 0.5, 'diamond'); break;
+      case 'late-systolic': noise(ctx, bp, ss+sd*.55, sd*.45, 280, 0.45, 'crescendo'); heartSound(ctx, bp, ss+sd*.45, 0.025, 200, 0.1); break;
+      case 'diastolic-early': noise(ctx, bp, ds, dd*.5, 220, 0.45, 'decrescendo'); break;
+      case 'diastolic-mid': heartSound(ctx, bp, ds+0.06, 0.02, 250, 0.08); noise(ctx, bp, ds+0.1, dd*.55, 80, 0.4, 'rumble'); break;
+      case 'continuous': noise(ctx, bp, ss, sd, 280, 0.5, 'flat'); noise(ctx, bp, ds, dd*.6, 250, 0.35, 'decrescendo'); break;
+      case 'soft': noise(ctx, bp, ss+sd*.15, sd*.6, 200, 0.25, 'soft-diamond'); break;
+      case 'ejection-harsh': noise(ctx, bp, ss, sd, 200, 0.65, 'late-diamond'); break;
+      case 'pansystolic-mild': noise(ctx, bp, ss, sd, 320, 0.38, 'flat'); break;
+      case 'diastolic-mid-rumble': heartSound(ctx, bp, ds+0.05, 0.02, 260, 0.09); noise(ctx, bp, ds+0.09, dd*.65, 70, 0.45, 'rumble'); break;
+    }
+  }
+  setTimeout(() => { if (isPlaying) stopAudio(); }, (duration + 0.5) * 1000);
+}
+
+function heartSound(ctx, dest, t, dur, freq, gain) {
+  const osc = ctx.createOscillator(), g = ctx.createGain();
+  osc.type = 'sine'; osc.frequency.setValueAtTime(freq, t); osc.frequency.exponentialRampToValueAtTime(freq*.5, t+dur);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t+dur*.2); g.gain.exponentialRampToValueAtTime(0.001, t+dur);
+  osc.connect(g); g.connect(dest); osc.start(t); osc.stop(t+dur+0.02); audioNodes.push(osc);
+}
+
+function noise(ctx, dest, t0, dur, freq, gain, shape) {
+  const buf = ctx.createBuffer(1, Math.max(1, Math.ceil(ctx.sampleRate*dur)), ctx.sampleRate);
+  const d = buf.getChannelData(0); for (let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  const src = ctx.createBufferSource(); src.buffer = buf;
+  const g = ctx.createGain(); g.gain.setValueAtTime(0.001, t0);
+  const pk = t0+dur;
+  if (shape==='flat'){g.gain.linearRampToValueAtTime(gain,t0+dur*.05);g.gain.setValueAtTime(gain,pk-dur*.05);g.gain.linearRampToValueAtTime(0.001,pk);}
+  else if (shape==='diamond'){const m=t0+dur*.5;g.gain.linearRampToValueAtTime(gain,m);g.gain.linearRampToValueAtTime(0.001,pk);}
+  else if (shape==='late-diamond'){const m=t0+dur*.65;g.gain.linearRampToValueAtTime(gain*.3,t0+dur*.2);g.gain.linearRampToValueAtTime(gain,m);g.gain.linearRampToValueAtTime(0.001,pk);}
+  else if (shape==='soft-diamond'){const m=t0+dur*.5;g.gain.linearRampToValueAtTime(gain,m);g.gain.linearRampToValueAtTime(0.001,pk);}
+  else if (shape==='crescendo'){g.gain.linearRampToValueAtTime(gain,pk-0.01);g.gain.linearRampToValueAtTime(0.001,pk);}
+  else if (shape==='decrescendo'){g.gain.linearRampToValueAtTime(gain,t0+0.01);g.gain.exponentialRampToValueAtTime(0.001,pk);}
+  else if (shape==='rumble'){g.gain.linearRampToValueAtTime(gain*.7,t0+dur*.1);g.gain.setValueAtTime(gain*.7,pk-dur*.1);g.gain.linearRampToValueAtTime(0.001,pk);}
+  const bpf = ctx.createBiquadFilter(); bpf.type='bandpass'; bpf.frequency.value=freq; bpf.Q.value=shape==='rumble'?1.5:0.8;
+  if (shape==='rumble'||shape==='soft-diamond'){const lpf=ctx.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=200;src.connect(bpf);bpf.connect(g);g.connect(lpf);lpf.connect(dest);}
+  else{src.connect(bpf);bpf.connect(g);g.connect(dest);}
+  src.start(t0); src.stop(t0+dur+0.05); audioNodes.push(src);
+}
+
+// ══════════════════════════════════════════
+// GAME STATE
+// ══════════════════════════════════════════
+const G = {
+  mode: 'timed',
+  caseIdx: 0,
+  score: 0, streak: 0, bestStreak: 0,
+  correct: 0, wrong: 0,
+  timeLeft: 120,
+  timerID: null,
+  timeOnQ: [],
+  missed: [],
+  results: {},  // caseIdx -> {correct,selectedIdx,timedOut}
+};
+
+const VS = {
+  timerSecs: 60,
+  players: [
+    { name:'P1', score:0, correct:0, wrong:0, streak:0, bestStreak:0, results:{}, timeOnQ:[], missed:[] },
+    { name:'P2', score:0, correct:0, wrong:0, streak:0, bestStreak:0, results:{}, timeOnQ:[], missed:[] },
+  ],
+  curPlayer: 0,
+  caseIdx: 0,
+  active: false,
+};
+
+function getCurrentCase() {
+  if (VS.active) return CASES[VS.caseIdx];
+  return CASES[G.caseIdx];
+}
+
+// ══════════════════════════════════════════
+// SCREEN / MODE
+// ══════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function selectMode(mode) {
+  G.mode = mode;
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('mode-' + mode).classList.add('selected');
+}
+
+function startGame() {
+  stopAudio(); clearInterval(G.timerID);
+  if (G.mode === 'vs') { showScreen('vs-setup'); return; }
+  // Reset
+  Object.assign(G, {caseIdx:0,score:0,streak:0,bestStreak:0,correct:0,wrong:0,timeLeft:120,timerID:null,timeOnQ:[],missed:[],results:{}});
+  VS.active = false;
+  showScreen('game');
+  setHUD('solo');
+  loadCase();
+}
+
+function setHUD(mode) {
+  const soloHud = document.getElementById('solo-hud');
+  const vsHud = document.getElementById('vs-hud');
+  const banner = document.getElementById('turn-banner');
+  if (mode === 'solo') {
+    soloHud.classList.remove('hidden'); vsHud.classList.add('hidden'); banner.className = 'turn-banner hidden';
+    document.getElementById('timer-wrap').style.display = G.mode === 'timed' ? '' : 'none';
+  } else {
+    soloHud.classList.add('hidden'); vsHud.classList.remove('hidden');
+    document.getElementById('vs-timer-wrap').style.display = VS.timerSecs > 0 ? '' : 'none';
+  }
+}
+
+// ══════════════════════════════════════════
+// CASE LOADING
+// ══════════════════════════════════════════
+function loadCase() {
+  clearInterval(G.timerID); stopAudio();
+  const c = CASES[G.caseIdx];
+  const saved = G.results[G.caseIdx];
+
+  // HUD
+  document.getElementById('hud-case').textContent = (G.caseIdx+1)+'/20';
+  document.getElementById('hud-score').textContent = G.score;
+  document.getElementById('hud-streak').textContent = G.streak+'🔥';
+  document.getElementById('progress-bar').style.width = (G.caseIdx/20*100)+'%';
+
+  fillCaseCard(c);
+  buildOptions(c, 'soloAnswer');
+
+  const saved2 = G.results[G.caseIdx];
+  const fb = document.getElementById('feedback-box');
+  fb.className = 'feedback-box';
+  document.getElementById('peek-hint').style.display = 'none';
+  document.getElementById('retry-btn').className = 'retry-btn';
+  document.getElementById('badge-wrap').innerHTML = '';
+
+  // Prev/Next
+  document.getElementById('prev-btn').disabled = G.caseIdx === 0;
+  document.getElementById('next-btn').textContent = G.caseIdx === CASES.length-1 && saved2 ? 'SEE RESULTS →' : 'NEXT →';
+
+  // Timer reset
+  const ring = document.getElementById('timer-fg');
+  ring.style.stroke = 'var(--red-bright)';
+
+  if (saved2) {
+    restoreAnswered(c, saved2, false);
+  } else {
+    G.timeLeft = 120;
+    ring.style.strokeDashoffset = '0';
+    document.getElementById('timer-num').textContent = '120';
+    if (G.mode === 'timed') startTimer();
+  }
+  document.getElementById('case-card').style.animation = 'none';
+  requestAnimationFrame(() => { document.getElementById('case-card').style.animation = 'fadeIn .35s ease'; });
+}
+
+function loadVsCase() {
+  clearInterval(G.timerID); stopAudio();
+  const cp = VS.curPlayer, player = VS.players[cp];
+  const c = CASES[VS.caseIdx];
+  const saved = player.results[VS.caseIdx];
+
+  // VS HUD
+  document.getElementById('vs-hud-case').textContent = (VS.caseIdx+1)+'/20';
+  document.getElementById('vs-p1-hud-score').textContent = VS.players[0].score;
+  document.getElementById('vs-p2-hud-score').textContent = VS.players[1].score;
+  document.getElementById('progress-bar').style.width = (VS.caseIdx/20*100)+'%';
+
+  // Turn banner
+  const banner = document.getElementById('turn-banner');
+  banner.className = 'turn-banner ' + (cp===0?'p1':'p2');
+  banner.textContent = (cp===0?'🔵':'🔴') + ' ' + VS.players[cp].name.toUpperCase() + "'S TURN — CASE "+(VS.caseIdx+1)+" OF 20";
+
+  fillCaseCard(c);
+  buildOptions(c, 'vsAnswer');
+
+  document.getElementById('feedback-box').className = 'feedback-box';
+  document.getElementById('peek-hint').style.display = 'none';
+  document.getElementById('retry-btn').className = 'retry-btn';
+  document.getElementById('badge-wrap').innerHTML = '';
+  document.getElementById('prev-btn').disabled = true;
+  document.getElementById('next-btn').textContent = VS.caseIdx===CASES.length-1 ? (cp===0?'END TURN →':'SEE RESULTS →') : 'NEXT →';
+  document.getElementById('next-btn').onclick = vsNext;
+
+  // VS timer
+  const vring = document.getElementById('vs-timer-fg');
+  vring.style.stroke = 'var(--red-bright)';
+  if (saved) {
+    restoreAnswered(c, saved, true);
+    vring.style.strokeDashoffset = '125.7';
+    document.getElementById('vs-timer-num').textContent = '0';
+  } else {
+    G.timeLeft = VS.timerSecs;
+    vring.style.strokeDashoffset = '0';
+    document.getElementById('vs-timer-num').textContent = VS.timerSecs || '∞';
+    if (VS.timerSecs > 0) startVsTimer();
+  }
+  document.getElementById('case-card').style.animation = 'none';
+  requestAnimationFrame(() => { document.getElementById('case-card').style.animation = 'fadeIn .35s ease'; });
+}
+
+function fillCaseCard(c) {
+  document.getElementById('case-num').textContent = String(VS.active ? VS.caseIdx+1 : G.caseIdx+1).padStart(2,'0');
+  document.getElementById('case-dept').textContent = c.dept;
+  document.getElementById('age-badge').textContent = c.ageLabel;
+  document.getElementById('age-badge').className = 'age-badge ' + c.ageBadgeClass;
+  document.getElementById('patient-avatar').textContent = c.avatar;
+  document.getElementById('patient-name').textContent = c.name;
+  document.getElementById('patient-meta').textContent = c.meta;
+  document.getElementById('case-narrative').textContent = c.narrative;
+  const pips = document.getElementById('diff-pips');
+  pips.innerHTML = '';
+  for (let i=1;i<=3;i++) { const p=document.createElement('div'); p.className='diff-pip'+(i<=c.difficulty?' on':''); pips.appendChild(p); }
+  document.getElementById('diff-label').textContent = ['','EASY','MODERATE','HARD'][c.difficulty];
+  document.getElementById('vitals-bar').innerHTML = c.vitals.map(v=>`<div class="vital"><div class="vital-name">${v.name}</div><div class="vital-val">${v.val}</div></div>`).join('');
+  document.getElementById('findings-grid').innerHTML = c.findings.map(f=>`<div class="finding"><div class="finding-label">${f.label}</div><div class="finding-val">${f.val}</div></div>`).join('');
+  document.getElementById('murmur-desc').textContent = c.murmur;
+  document.getElementById('audio-name').textContent = c.audioLabel || 'Tap ▶ to auscultate';
+  document.getElementById('audio-play-btn').innerHTML = '&#9654;';
+  document.getElementById('audio-play-btn').classList.remove('playing');
+  document.getElementById('audio-bars').classList.remove('active');
+  generateWaveform(c.waveformType);
+  updateDiagram(c.auscultationSpots);
+}
+
+function buildOptions(c, handlerName) {
+  const letters = ['A','B','C','D'];
+  document.getElementById('options-list').innerHTML = c.options.map((opt,i) =>
+    `<button class="option-btn" onclick="${handlerName}(${i})"><span class="option-letter">${letters[i]}</span>${opt}</button>`
+  ).join('');
+}
+
+function restoreAnswered(c, saved, isVs) {
+  const correctIdx = c.correct - 1;
+  document.querySelectorAll('.option-btn').forEach((btn,i) => {
+    if (i === correctIdx) btn.classList.add('correct');
+    else if (i === saved.selectedIdx && !saved.correct) btn.classList.add('wrong');
+    btn.classList.add('revealed');
+  });
+  document.getElementById('badge-wrap').innerHTML = saved.timedOut
+    ? '<span class="answered-badge skipped-badge">⏱ TIMED OUT</span>'
+    : (saved.correct ? '<span class="answered-badge correct-badge">✓ CORRECT</span>' : '<span class="answered-badge wrong-badge">✗ WRONG</span>');
+  showFeedback(saved.correct, c);
+  document.getElementById('peek-hint').style.display = 'block';
+  document.getElementById('retry-btn').className = 'retry-btn visible';
+  if (!isVs) {
+    document.getElementById('next-btn').textContent = G.caseIdx === CASES.length-1 ? 'SEE RESULTS →' : 'NEXT →';
+  }
+}
+
+function generateWaveform(type) {
+  let pts = '';
+  if (type==='continuous'){const p=[];for(let x=0;x<400;x+=5){const ph=(x/400)*Math.PI*4;p.push(x+','+(20-Math.sin(ph)*14-Math.sin(ph*2)*5));}pts=p.join(' ');}
+  else if (type==='pansystolic') pts='0,20 15,20 18,8 115,8 118,20 200,20 205,20 218,8 315,8 318,20 400,20';
+  else if (type==='ejection') pts='0,20 15,20 18,24 35,12 60,3 85,12 100,22 115,20 200,20 205,20 218,24 235,12 260,3 285,12 300,22 315,20 400,20';
+  else if (type==='diastolic') pts='0,20 15,4 50,12 85,19 110,20 125,20 140,20 155,4 190,12 225,19 250,20 265,20 400,20';
+  else if (type==='late-systolic') pts='0,20 15,20 40,20 65,18 88,10 102,5 112,20 125,20 200,20 215,20 240,20 265,18 288,10 302,5 312,20 325,20 400,20';
+  else pts='0,20 12,20 18,18 28,17 38,18 50,20 70,20 78,18 88,17 98,18 108,20 125,20 200,20 212,18 222,17 232,18 242,20 260,20 270,18 280,17 290,18 300,20 320,20 400,20';
+  document.getElementById('waveform-line').setAttribute('points', pts);
+}
+
+// ══════════════════════════════════════════
+// SOLO TIMER
+// ══════════════════════════════════════════
+function startTimer() {
+  const CIRC = 125.7;
+  const ring = document.getElementById('timer-fg');
+  const num = document.getElementById('timer-num');
+  G.timerID = setInterval(() => {
+    G.timeLeft--;
+    num.textContent = G.timeLeft;
+    ring.style.strokeDashoffset = CIRC * (1 - G.timeLeft / 120);
+    ring.style.stroke = G.timeLeft <= 24 ? 'var(--red-bright)' : G.timeLeft <= 48 ? '#e67e22' : 'var(--red-bright)';
+    if (G.timeLeft <= 0) { clearInterval(G.timerID); soloTimeUp(); }
+  }, 1000);
+}
+
+function soloTimeUp() {
+  G.streak = 0;
+  G.wrong++;
+  const c = CASES[G.caseIdx];
+  G.results[G.caseIdx] = { correct: false, selectedIdx: -1, timedOut: true };
+  G.missed.push({ id: G.caseIdx, correctAns: c.options[c.correct-1] });
+  G.timeOnQ.push(120);
+  document.querySelectorAll('.option-btn').forEach((btn,i) => {
+    if (i === c.correct-1) btn.classList.add('correct');
+    btn.classList.add('revealed');
+  });
+  document.getElementById('badge-wrap').innerHTML = '<span class="answered-badge skipped-badge">⏱ TIMED OUT</span>';
+  document.getElementById('hud-streak').textContent = '0🔥';
+  showFeedback(false, c);
+  document.getElementById('peek-hint').style.display = 'block';
+  document.getElementById('retry-btn').className = 'retry-btn visible';
+}
+
+// ══════════════════════════════════════════
+// SOLO ANSWERING
+// ══════════════════════════════════════════
+function soloAnswer(idx) {
+  const saved = G.results[G.caseIdx];
+  const c = CASES[G.caseIdx];
+  if (saved) { peekOption(idx, c); return; }
+
+  clearInterval(G.timerID);
+  const timeTaken = 120 - G.timeLeft;
+  G.timeOnQ.push(timeTaken);
+
+  const correctIdx = c.correct - 1;
+  const isCorrect = idx === correctIdx;
+  G.results[G.caseIdx] = { correct: isCorrect, selectedIdx: idx, timedOut: false };
+
+  document.querySelectorAll('.option-btn').forEach((btn,i) => {
+    if (i === correctIdx) btn.classList.add('correct');
+    else if (i === idx && !isCorrect) btn.classList.add('wrong');
+    btn.classList.add('revealed');
+  });
+
+  if (isCorrect) {
+    G.correct++; G.streak++;
+    if (G.streak > G.bestStreak) G.bestStreak = G.streak;
+    let pts = 100 + (G.mode==='timed' ? Math.floor(G.timeLeft * 0.75) : 0);
+    if (G.streak >= 3) { pts = Math.floor(pts*1.5); showToast('🔥 '+G.streak+'x STREAK! +'+pts+' pts'); }
+    else showToast('✓ CORRECT! +'+pts+' pts');
+    G.score += pts;
+    document.getElementById('badge-wrap').innerHTML = '<span class="answered-badge correct-badge">✓ CORRECT</span>';
+  } else {
+    G.wrong++; G.streak = 0;
+    G.missed.push({ id: G.caseIdx, correctAns: c.options[correctIdx] });
+    showToast('✗ INCORRECT');
+    document.getElementById('badge-wrap').innerHTML = '<span class="answered-badge wrong-badge">✗ WRONG</span>';
+  }
+  document.getElementById('hud-score').textContent = G.score;
+  document.getElementById('hud-streak').textContent = G.streak+'🔥';
+  showFeedback(isCorrect, c);
+  document.getElementById('peek-hint').style.display = 'block';
+  document.getElementById('retry-btn').className = 'retry-btn visible';
+  document.getElementById('next-btn').textContent = G.caseIdx === CASES.length-1 ? 'SEE RESULTS →' : 'NEXT →';
+}
+
+function peekOption(idx, c) {
+  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('peeked'));
+  document.querySelectorAll('.option-btn')[idx].classList.add('peeked');
+  const isCorrectOpt = idx === c.correct - 1;
+  const fb = document.getElementById('feedback-box');
+  fb.className = 'feedback-box visible' + (isCorrectOpt ? '' : ' wrong-fb');
+  document.getElementById('feedback-result').textContent = isCorrectOpt ? `✓ OPTION ${['A','B','C','D'][idx]} — CORRECT` : `✗ OPTION ${['A','B','C','D'][idx]} — INCORRECT`;
+  document.getElementById('feedback-result').className = 'feedback-result ' + (isCorrectOpt ? 'correct-text' : 'wrong-text');
+  document.getElementById('feedback-explanation').textContent = c.optionExplanations ? c.optionExplanations[idx] : c.explanation;
+  document.getElementById('feedback-pearl').textContent = c.pearl;
+}
+
+function showFeedback(isCorrect, c) {
+  const fb = document.getElementById('feedback-box');
+  const saved = VS.active ? VS.players[VS.curPlayer].results[VS.caseIdx] : G.results[G.caseIdx];
+  fb.className = 'feedback-box visible' + (isCorrect ? '' : ' wrong-fb');
+  document.getElementById('feedback-result').textContent = isCorrect ? '✓ CORRECT' : (saved && saved.timedOut ? '⏱ TIME EXPIRED' : '✗ INCORRECT');
+  document.getElementById('feedback-result').className = 'feedback-result ' + (isCorrect ? 'correct-text' : 'wrong-text');
+  document.getElementById('feedback-explanation').textContent = c.explanation;
+  document.getElementById('feedback-pearl').textContent = c.pearl;
+}
+
+// Navigate solo
+function navigate(dir) {
+  clearInterval(G.timerID); stopAudio();
+  if (dir === 1) {
+    const saved = G.results[G.caseIdx];
+    if (G.caseIdx === CASES.length - 1) {
+      if (saved) showResults(); return;
+    }
+    G.caseIdx++;
+  } else {
+    if (G.caseIdx === 0) return;
+    G.caseIdx--;
+  }
+  loadCase();
+}
+
+function retryCase() {
+  if (VS.active) return;
+  const saved = G.results[G.caseIdx];
+  if (!saved) return;
+  if (saved.correct) {
+    let pts = 100 + (G.mode==='timed' ? Math.floor((120 - (G.timeOnQ[G.timeOnQ.length-1]||0)) * 0.75) : 0);
+    G.score = Math.max(0, G.score - pts);
+    G.correct = Math.max(0, G.correct - 1);
+  } else if (!saved.timedOut) {
+    G.wrong = Math.max(0, G.wrong - 1);
+    const mi = G.missed.findIndex(m => m.id === G.caseIdx);
+    if (mi !== -1) G.missed.splice(mi, 1);
+  }
+  delete G.results[G.caseIdx];
+  document.getElementById('hud-score').textContent = G.score;
+  loadCase();
+}
+
+// ══════════════════════════════════════════
+// RESULTS
+// ══════════════════════════════════════════
+function showResults() {
+  clearInterval(G.timerID); stopAudio();
+  showScreen('results');
+  document.getElementById('res-score').textContent = G.score;
+  document.getElementById('res-correct').textContent = G.correct;
+  document.getElementById('res-wrong').textContent = G.wrong;
+  document.getElementById('res-streak').textContent = G.bestStreak;
+  const avg = G.timeOnQ.length && G.mode==='timed' ? Math.round(G.timeOnQ.reduce((a,b)=>a+b,0)/G.timeOnQ.length)+'s' : '—';
+  document.getElementById('res-time').textContent = avg;
+  const pct = G.correct / CASES.length * 100;
+  let grade, col;
+  if (pct>=90){grade='CONSULTANT LEVEL 🏆';col='var(--gold)';}
+  else if (pct>=75){grade='SENIOR REGISTRAR ⭐';col='var(--green)';}
+  else if (pct>=60){grade='REGISTRAR 📋';col='var(--blue)';}
+  else if (pct>=40){grade='FOUNDATION YEAR 📚';col='var(--orange)';}
+  else{grade='NEEDS REVISION 🔄';col='var(--red-bright)';}
+  const gradeEl = document.getElementById('res-grade');
+  gradeEl.textContent = grade; gradeEl.style.color = col;
+  const seen = new Set();
+  const uniq = G.missed.filter(m => { if (seen.has(m.id)) return false; seen.add(m.id); return true; });
+  const ml = document.getElementById('res-missed');
+  ml.innerHTML = uniq.length
+    ? '<div class="missed-title">CASES TO REVIEW ('+uniq.length+')</div>' + uniq.map(m=>`<div class="missed-item"><strong>${CASES[m.id].name} — ${CASES[m.id].ageLabel}</strong>Correct: ${m.correctAns}</div>`).join('')
+    : '<div style="color:var(--green);font-family:Bebas Neue,sans-serif;font-size:1.1rem;letter-spacing:2px">PERFECT SCORE! 🎉</div>';
+}
+
+// ══════════════════════════════════════════
+// VS MODE
+// ══════════════════════════════════════════
+let vsTimerChoice = 60;
+function pickVsTimer(s) {
+  vsTimerChoice = s;
+  document.querySelectorAll('.vs-timer-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('vt'+s).classList.add('selected');
+}
+
+function beginVs() {
+  const p1 = document.getElementById('p1name').value.trim()||'Player 1';
+  const p2 = document.getElementById('p2name').value.trim()||'Player 2';
+  VS.timerSecs = vsTimerChoice;
+  VS.players = [
+    { name:p1, score:0, correct:0, wrong:0, streak:0, bestStreak:0, results:{}, timeOnQ:[], missed:[] },
+    { name:p2, score:0, correct:0, wrong:0, streak:0, bestStreak:0, results:{}, timeOnQ:[], missed:[] },
+  ];
+  VS.curPlayer = 0; VS.caseIdx = 0; VS.active = true;
+  document.getElementById('vs-p1-hud-name').textContent = p1.substring(0,10);
+  document.getElementById('vs-p2-hud-name').textContent = p2.substring(0,10);
+  showScreen('game');
+  setHUD('vs');
+  document.getElementById('next-btn').onclick = vsNext;
+  loadVsCase();
+}
+
+function startVsTimer() {
+  const CIRC = 125.7, total = VS.timerSecs;
+  const ring = document.getElementById('vs-timer-fg');
+  const num = document.getElementById('vs-timer-num');
+  G.timerID = setInterval(() => {
+    G.timeLeft--;
+    num.textContent = G.timeLeft;
+    ring.style.strokeDashoffset = CIRC * (1 - G.timeLeft / total);
+    ring.style.stroke = G.timeLeft <= total*0.2 ? 'var(--red-bright)' : G.timeLeft <= total*0.4 ? '#e67e22' : 'var(--red-bright)';
+    if (G.timeLeft <= 0) { clearInterval(G.timerID); vsTimeUp(); }
+  }, 1000);
+}
+
+function vsTimeUp() {
+  const cp = VS.curPlayer, player = VS.players[cp];
+  const c = CASES[VS.caseIdx];
+  player.streak = 0; player.wrong++;
+  player.results[VS.caseIdx] = { correct:false, selectedIdx:-1, timedOut:true };
+  player.missed.push({ id:VS.caseIdx, correctAns:c.options[c.correct-1] });
+  player.timeOnQ.push(VS.timerSecs);
+  document.querySelectorAll('.option-btn').forEach((btn,i) => {
+    if (i===c.correct-1) btn.classList.add('correct');
+    btn.classList.add('revealed');
+  });
+  document.getElementById('badge-wrap').innerHTML = '<span class="answered-badge skipped-badge">⏱ TIMED OUT</span>';
+  showFeedback(false, c);
+  document.getElementById('peek-hint').style.display = 'block';
+}
+
+function vsAnswer(idx) {
+  const cp = VS.curPlayer, player = VS.players[cp];
+  const saved = player.results[VS.caseIdx];
+  const c = CASES[VS.caseIdx];
+  if (saved) { peekOption(idx, c); return; }
+
+  clearInterval(G.timerID);
+  const timeTaken = VS.timerSecs > 0 ? VS.timerSecs - G.timeLeft : 0;
+  player.timeOnQ.push(timeTaken);
+
+  const correctIdx = c.correct - 1;
+  const isCorrect = idx === correctIdx;
+  player.results[VS.caseIdx] = { correct:isCorrect, selectedIdx:idx, timedOut:false };
+
+  document.querySelectorAll('.option-btn').forEach((btn,i) => {
+    if (i===correctIdx) btn.classList.add('correct');
+    else if (i===idx && !isCorrect) btn.classList.add('wrong');
+    btn.classList.add('revealed');
+  });
+
+  if (isCorrect) {
+    player.correct++; player.streak++;
+    if (player.streak > player.bestStreak) player.bestStreak = player.streak;
+    let pts = 100;
+    if (VS.timerSecs > 0) pts += Math.floor(G.timeLeft * (60/VS.timerSecs) * 0.75);
+    if (player.streak >= 3) pts = Math.floor(pts * 1.5);
+    player.score += pts;
+    document.getElementById('badge-wrap').innerHTML = '<span class="answered-badge correct-badge">✓ CORRECT</span>';
+    showToast('✓ +'+pts+' pts');
+  } else {
+    player.wrong++; player.streak = 0;
+    player.missed.push({ id:VS.caseIdx, correctAns:c.options[correctIdx] });
+    document.getElementById('badge-wrap').innerHTML = '<span class="answered-badge wrong-badge">✗ WRONG</span>';
+    showToast('✗ INCORRECT');
+  }
+
+  document.getElementById('vs-p1-hud-score').textContent = VS.players[0].score;
+  document.getElementById('vs-p2-hud-score').textContent = VS.players[1].score;
+  showFeedback(isCorrect, c);
+  document.getElementById('peek-hint').style.display = 'block';
+  document.getElementById('next-btn').textContent = VS.caseIdx===CASES.length-1 ? (cp===0?'END TURN →':'SEE RESULTS →') : 'NEXT →';
+}
+
+function vsNext() {
+  clearInterval(G.timerID); stopAudio();
+  const cp = VS.curPlayer;
+  if (!VS.players[cp].results[VS.caseIdx]) return; // must answer first
+  if (VS.caseIdx === CASES.length-1) {
+    if (cp===0) {
+      VS.curPlayer = 1; VS.caseIdx = 0;
+      showPass();
+    } else {
+      showVsResults();
+    }
+  } else {
+    VS.caseIdx++;
+    loadVsCase();
+  }
+}
+
+function showPass() {
+  const p = VS.players;
+  document.getElementById('pass-title').innerHTML = 'PASS TO <span class="p2c">'+p[1].name.toUpperCase()+'</span>';
+  document.getElementById('pass-sub').textContent = p[0].name+' has finished! Hand the device to '+p[1].name+'. They should not look until ready.';
+  document.getElementById('pass-scores').innerHTML = `
+    <div class="pass-sb"><div class="pass-sb-name">${p[0].name}</div><div class="pass-sb-val p1">${p[0].score}</div></div>
+    <div class="pass-vs-sep">—</div>
+    <div class="pass-sb"><div class="pass-sb-name">${p[1].name}</div><div class="pass-sb-val p2">?</div></div>`;
+  document.getElementById('pass-ready-btn').textContent = p[1].name.toUpperCase()+' IS READY →';
+  document.getElementById('pass-overlay').classList.add('active');
+}
+
+function dismissPass() {
+  document.getElementById('pass-overlay').classList.remove('active');
+  loadVsCase();
+}
+
+function showVsResults() {
+  clearInterval(G.timerID); stopAudio(); VS.active = false;
+  showScreen('vs-results');
+  const p = VS.players;
+  const p1w = p[0].score > p[1].score, tie = p[0].score === p[1].score;
+  const winEl = document.getElementById('vs-winner-label');
+  if (tie) { winEl.textContent = "IT'S A TIE!"; winEl.style.color='var(--gold)'; }
+  else {
+    const w = p1w?p[0]:p[1];
+    winEl.innerHTML = `<span style="color:${p1w?'var(--blue)':'var(--red-bright)'}">${w.name.toUpperCase()}</span> WINS!`;
+  }
+  document.getElementById('vs-result-cards').innerHTML = [0,1].map(i=>{
+    const pl=p[i], isW=!tie&&((i===0&&p1w)||(i===1&&!p1w));
+    const avg=pl.timeOnQ.length&&VS.timerSecs>0?Math.round(pl.timeOnQ.reduce((a,b)=>a+b,0)/pl.timeOnQ.length)+'s':'—';
+    return `<div class="vs-result-card ${isW?'winner':''}">
+      <div class="vrc-name ${i===0?'p1':'p2'}">${pl.name}</div>
+      <div class="vrc-score">${pl.score}</div>
+      <div class="vrc-stats">
+        <div class="vrc-stat"><span>Correct</span><span>${pl.correct}/20</span></div>
+        <div class="vrc-stat"><span>Wrong</span><span>${pl.wrong}</span></div>
+        <div class="vrc-stat"><span>Best Streak</span><span>${pl.bestStreak}🔥</span></div>
+        <div class="vrc-stat"><span>Avg Time</span><span>${avg}</span></div>
+      </div></div>`;
+  }).join('');
+  const allMissed = [];
+  p.forEach((pl,pi)=>pl.missed.forEach(m=>allMissed.push({...m,pname:pl.name})));
+  const vm = document.getElementById('vs-missed');
+  vm.innerHTML = allMissed.length
+    ? '<div class="missed-title">CASES TO REVIEW</div>'+allMissed.map(m=>`<div class="missed-item"><strong>${CASES[m.id].name} — ${CASES[m.id].ageLabel} (${m.pname})</strong>Correct: ${m.correctAns}</div>`).join('')
+    : '<div style="color:var(--green);font-family:Bebas Neue,sans-serif;font-size:1.1rem;letter-spacing:2px">BOTH PLAYERS ACED IT! 🎉</div>';
+}
+
+// ══════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+</script>
+</body>
+</html>
