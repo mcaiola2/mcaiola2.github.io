@@ -1846,7 +1846,7 @@ function loadVsCase() {
   document.getElementById('retry-btn').className = 'retry-btn';
   document.getElementById('badge-wrap').innerHTML = '';
   document.getElementById('prev-btn').disabled = true;
-  document.getElementById('next-btn').textContent = VS.caseIdx===CASES.length-1 ? (cp===0?'END TURN →':'SEE RESULTS →') : 'NEXT →';
+  document.getElementById('next-btn').textContent = VS.caseIdx===CASES.length-1 ? 'SEE RESULTS →' : 'NEXT →';
   document.getElementById('next-btn').onclick = vsNext;
 
   // VS timer
@@ -2185,7 +2185,7 @@ function vsAnswer(idx) {
   document.getElementById('vs-p2-hud-score').textContent = VS.players[1].score;
   showFeedback(isCorrect, c);
   document.getElementById('peek-hint').style.display = 'block';
-  document.getElementById('next-btn').textContent = VS.caseIdx===CASES.length-1 ? (cp===0?'END TURN →':'SEE RESULTS →') : 'NEXT →';
+  document.getElementById('next-btn').textContent = VS.caseIdx===CASES.length-1 ? 'SEE RESULTS →' : 'NEXT →';
 }
 
 function vsNext() {
@@ -2193,27 +2193,25 @@ function vsNext() {
   const cp = VS.curPlayer;
   if (!VS.players[cp].results[VS.caseIdx]) return; // must answer first
   if (VS.caseIdx === CASES.length-1) {
-    if (cp===0) {
-      VS.curPlayer = 1; VS.caseIdx = 0;
-      showPass();
-    } else {
-      showVsResults();
-    }
+    showVsResults();
   } else {
     VS.caseIdx++;
-    loadVsCase();
+    VS.curPlayer = 1 - cp;
+    showPass();
   }
 }
 
 function showPass() {
   const p = VS.players;
-  document.getElementById('pass-title').innerHTML = 'PASS TO <span class="p2c">'+p[1].name.toUpperCase()+'</span>';
-  document.getElementById('pass-sub').textContent = p[0].name+' has finished! Hand the device to '+p[1].name+'. They should not look until ready.';
+  const next = VS.players[VS.curPlayer];
+  const colorClass = VS.curPlayer === 0 ? 'p1c' : 'p2c';
+  document.getElementById('pass-title').innerHTML = 'PASS TO <span class="'+colorClass+'">'+next.name.toUpperCase()+'</span>';
+  document.getElementById('pass-sub').textContent = 'Hand the device to '+next.name+'. They should not look until ready.';
   document.getElementById('pass-scores').innerHTML = `
     <div class="pass-sb"><div class="pass-sb-name">${p[0].name}</div><div class="pass-sb-val p1">${p[0].score}</div></div>
     <div class="pass-vs-sep">—</div>
-    <div class="pass-sb"><div class="pass-sb-name">${p[1].name}</div><div class="pass-sb-val p2">?</div></div>`;
-  document.getElementById('pass-ready-btn').textContent = p[1].name.toUpperCase()+' IS READY →';
+    <div class="pass-sb"><div class="pass-sb-name">${p[1].name}</div><div class="pass-sb-val p2">${p[1].score}</div></div>`;
+  document.getElementById('pass-ready-btn').textContent = next.name.toUpperCase()+' IS READY →';
   document.getElementById('pass-overlay').classList.add('active');
 }
 
