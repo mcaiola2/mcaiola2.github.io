@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -394,10 +394,6 @@ body::before{content:'';position:fixed;inset:0;background-image:repeating-linear
         <div>
           <div class="patient-name" id="patient-name">—</div>
           <div class="patient-meta" id="patient-meta">—</div>
-          <div style="display:flex;gap:6px;margin-top:5px;align-items:center">
-            <div class="diff-pips" id="diff-pips"><div class="diff-pip on"></div><div class="diff-pip"></div><div class="diff-pip"></div></div>
-            <span style="font-size:.6rem;color:var(--text-dim);font-family:'DM Mono',monospace" id="diff-label">EASY</span>
-          </div>
         </div>
       </div>
       <div class="vitals-bar" id="vitals-bar"></div>
@@ -625,7 +621,7 @@ const CASES = [
       { label: 'S2', val: 'Single, loud' },
       { label: 'Chest X-Ray', val: 'Egg-on-side appearance, narrow mediastinum' },
     ],
-    murmur: 'No significant murmur. Single loud S2. Soft ejection murmur occasionally heard at the left upper sternal border.',
+    murmur: 'Single loud S2. Soft ejection murmur at the left upper sternal border.',
     waveformType: 'simple',
     audioType: 'soft',
     audioLabel: 'Soft ESM + Single loud S2 (TGA)',
@@ -672,7 +668,7 @@ const CASES = [
       { label: 'Hepatomegaly', val: 'Mild (2cm below costal margin)' },
       { label: 'CXR', val: 'Cardiomegaly, increased pulmonary vascular markings' },
     ],
-    murmur: 'Continuous "machinery" murmur, loudest at left infraclavicular region and left upper sternal border. Present throughout systole and diastole.',
+    murmur: 'Continuous "machinery" murmur at the left infraclavicular region.',
     waveformType: 'continuous',
     audioType: 'continuous',
     audioLabel: 'Continuous "Machinery" Murmur (PDA)',
@@ -704,7 +700,7 @@ const CASES = [
     ageBadgeClass: 'age-infant',
     avatar: '🧒',
     name: 'Lily Thompson',
-    dept: 'Paediatric Cardiology',
+    dept: 'Pediatric Cardiology',
     meta: 'Age: 4 months · F · Referred from PCP',
     difficulty: 1,
     vitals: [
@@ -720,7 +716,7 @@ const CASES = [
       { label: 'S1/S2', val: 'Normal S1, loud P2' },
       { label: 'CXR', val: 'Cardiomegaly, pulmonary plethora' },
     ],
-    murmur: 'Harsh pansystolic murmur, grade 4/6, loudest at left lower sternal border. Radiates across the precordium. Associated thrill palpable.',
+    murmur: 'Harsh pansystolic murmur at the left lower sternal border with a palpable thrill.',
     waveformType: 'pansystolic',
     audioType: 'pansystolic',
     audioLabel: 'Harsh Pansystolic Murmur (VSD)',
@@ -753,7 +749,7 @@ const CASES = [
     ageBadgeClass: 'age-infant',
     avatar: '🧒',
     name: 'James Williams',
-    dept: 'Paediatric Emergency',
+    dept: 'Pediatric Emergency',
     meta: 'Age: 18 months · M · Collapse episode',
     difficulty: 2,
     vitals: [
@@ -769,7 +765,7 @@ const CASES = [
       { label: 'Precordium', val: 'Right ventricular heave' },
       { label: 'CXR', val: 'Boot-shaped heart, oligaemic lung fields' },
     ],
-    murmur: 'Harsh ejection systolic murmur, grade 3/6 at left upper sternal border, radiating to lung fields. Murmur shortens or disappears during hypercyanotic spells.',
+    murmur: 'Harsh ejection systolic murmur at the left upper sternal border. Disappears during hypercyanotic (tet) spells.',
     waveformType: 'ejection',
     audioType: 'ejection',
     audioLabel: 'Ejection Systolic Murmur — RVOTO (Tetralogy of Fallot)',
@@ -801,7 +797,7 @@ const CASES = [
     ageBadgeClass: 'age-child',
     avatar: '👦',
     name: 'Sophie Clark',
-    dept: 'General Paediatrics',
+    dept: 'General Pediatrics',
     meta: 'Age: 6 years · F · School screening referral',
     difficulty: 1,
     vitals: [
@@ -817,7 +813,7 @@ const CASES = [
       { label: 'S1/S2', val: 'Normal, no additional sounds' },
       { label: 'Variation', val: 'Murmur disappears when sitting up or during Valsalva' },
     ],
-    murmur: 'Soft vibratory/musical murmur, grade 2/6, mid-systolic, heard best at lower left sternal border and apex. Low-pitched humming quality. No radiation.',
+    murmur: 'Soft vibratory, musical mid-systolic murmur at the lower left sternal border. No radiation.',
     waveformType: 'soft',
     audioType: 'soft',
     audioLabel: "Soft Vibratory Murmur — Still's (Innocent)",
@@ -849,7 +845,7 @@ const CASES = [
     ageBadgeClass: 'age-child',
     avatar: '👦',
     name: 'Aiden Murphy',
-    dept: 'Paediatric Cardiology',
+    dept: 'Pediatric Cardiology',
     meta: 'Age: 10 years · M · Recurrent chest pain',
     difficulty: 2,
     vitals: [
@@ -865,7 +861,7 @@ const CASES = [
       { label: 'Rib notching', val: 'Inferior rib margins (CXR)' },
       { label: 'Signs', val: 'Visible collateral vessels on back' },
     ],
-    murmur: 'Systolic murmur over the precordium and interscapular region. Collateral vessel bruits heard over the back.',
+    murmur: 'Systolic murmur at the interscapular region. Collateral vessel bruits over the back.',
     waveformType: 'ejection',
     audioType: 'ejection',
     audioLabel: 'Interscapular Systolic Murmur (Coarctation)',
@@ -897,7 +893,7 @@ const CASES = [
     ageBadgeClass: 'age-child',
     avatar: '🧑',
     name: 'Emily Davis',
-    dept: 'General Paediatrics',
+    dept: 'General Pediatrics',
     meta: 'Age: 14 years · F · Palpitations & fatigue',
     difficulty: 2,
     vitals: [
@@ -906,14 +902,14 @@ const CASES = [
       { name: 'BP', val: '108/70 mmHg' },
       { name: 'RR', val: '14/min' },
     ],
-    narrative: 'A 14-year-old girl presents with a 2-year history of fatigue and exertional dyspnoea. Her parents initially attributed symptoms to puberty and being a "growing girl." She has mild fixed splitting of S2. Her ECG shows a right bundle branch block pattern.',
+    narrative: 'A 14-year-old girl presents with a 2-year history of fatigue and exertional Dyspnea. Her parents initially attributed symptoms to puberty and being a "growing girl." She has mild fixed splitting of S2. Her ECG shows a right bundle branch block pattern.',
     findings: [
       { label: 'S2 Splitting', val: 'Fixed splitting of S2 (all respiratory phases)' },
       { label: 'ECG', val: 'Incomplete RBBB, right axis deviation' },
       { label: 'CXR', val: 'Dilated pulmonary artery, increased lung markings' },
       { label: 'Thyroid', val: 'Normal' },
     ],
-    murmur: 'Soft ejection systolic murmur, grade 2/6, at the left upper sternal border (pulmonary area). Fixed splitting of the second heart sound is the key finding.',
+    murmur: 'Soft ejection systolic murmur at the pulmonary area. Fixed splitting of S2.',
     waveformType: 'soft',
     audioType: 'soft',
     audioLabel: 'Pulmonary Flow Murmur + Fixed Split S2 (ASD)',
@@ -935,7 +931,7 @@ const CASES = [
       '✓ CORRECT — ASD causes right heart volume overload producing a soft pulmonary flow murmur and, crucially, fixed splitting of S2. The RBBB pattern on ECG reflects RV volume overload. Females are affected more than males. Often diagnosed late in adolescence or adulthood.',
       '✗ VSD causes a pansystolic murmur at the LLSB — not a soft ejection systolic murmur in the pulmonary area. VSD does not produce fixed S2 splitting. Large VSDs would cause heart failure symptoms in infancy, not subtle symptoms at age 14.',
       '✗ Pulmonary stenosis causes an ejection systolic murmur at the left upper sternal border with a pulmonary click, and S2 splitting that widens on inspiration (not fixed). PS would not produce RBBB or the dilated pulmonary artery seen here.',
-      "✗ Still's murmur is innocent, soft, positional, and disappears on standing. It does not cause fatigue, exertional dyspnoea, dilated pulmonary artery on CXR, or RBBB on ECG. An innocent murmur has no haemodynamic consequence.",
+      "✗ Still's murmur is innocent, soft, positional, and disappears on standing. It does not cause fatigue, exertional Dyspnea, dilated pulmonary artery on CXR, or RBBB on ECG. An innocent murmur has no haemodynamic consequence.",
     ],
   },
   {
@@ -961,7 +957,7 @@ const CASES = [
       { label: 'Murmur Change', val: 'Louder on standing and Valsalva' },
       { label: 'Murmur Change', val: 'Softer when squatting' },
     ],
-    murmur: 'Mid-to-late systolic murmur preceded by a click, heard best at the apex and lower left sternal border. Increases in intensity and moves earlier with standing and Valsalva manoeuvre.',
+    murmur: 'Mid-to-late systolic murmur with a click at the apex. Louder and moves earlier with standing and Valsalva.',
     waveformType: 'late-systolic',
     audioType: 'late-systolic',
     audioLabel: 'Late Systolic Murmur + Click (HOCM)',
@@ -1002,14 +998,13 @@ const CASES = [
       { name: 'BP', val: '106/64 mmHg' },
       { name: 'CRP', val: '84 mg/L' },
     ],
-    narrative: 'A 32-year-old woman presents with joint pain, fever, and dyspnoea 3 weeks after a severe sore throat treated with ibuprofen only. She has erythema marginatum on her trunk and subcutaneous nodules. ESR and CRP are markedly elevated. Throat swab was GAS-positive 3 weeks ago.',
+    narrative: 'A 32-year-old woman presents with joint pain, fever, and Dyspnea 3 weeks after a severe sore throat treated with ibuprofen only. She has erythema marginatum on her trunk and subcutaneous nodules. ESR and CRP are markedly elevated. Throat swab was GAS-positive 3 weeks ago.',
     findings: [
       { label: 'Joints', val: 'Migratory polyarthritis — knees, ankles' },
       { label: 'Skin', val: 'Erythema marginatum, subcutaneous nodules' },
       { label: 'Neuro', val: 'Mild chorea — jerky hand movements' },
-      { label: 'Echo', val: 'Mitral valve thickening, mild MR' },
     ],
-    murmur: 'High-pitched blowing pansystolic murmur at the apex, radiating to the left axilla. Grade 3/6. Also a soft low-pitched mid-diastolic murmur (Carey Coombs murmur) at the apex.',
+    murmur: 'Pansystolic murmur at the apex radiating to the left axilla. Mid-diastolic Carey Coombs murmur also present.',
     waveformType: 'pansystolic',
     audioType: 'pansystolic-mild',
     audioLabel: 'Apical Pansystolic + Carey Coombs Murmur (ARF)',
@@ -1026,7 +1021,7 @@ const CASES = [
       'Infective Endocarditis',
     ],
     explanation: 'Acute Rheumatic Fever (ARF) follows Group A Streptococcal pharyngitis 2–4 weeks later. Jones Criteria: the major criteria include carditis (pancarditis), polyarthritis, chorea, erythema marginatum, and subcutaneous nodules. Carditis is the most serious manifestation — mitral regurgitation is the hallmark. The Carey Coombs murmur (mid-diastolic, low-pitched) reflects turbulent flow across an inflamed, thickened mitral valve. Treatment: penicillin (eradicate GAS) + aspirin/steroids for inflammation + secondary prophylaxis for years.',
-    pearl: '💎 Pearl: The Carey Coombs murmur of ARF carditis is a mid-diastolic murmur at the apex — it occurs due to relative mitral stenosis from leaflet oedema. It resolves with treatment and should NOT be confused with established rheumatic mitral stenosis.',
+    pearl: '💎 Pearl: The Carey Coombs murmur of ARF carditis is a mid-diastolic murmur at the apex — it occurs due to relative mitral stenosis from leaflet Edema. It resolves with treatment and should NOT be confused with established rheumatic mitral stenosis.',
     optionExplanations: [
       '✗ Mitral Valve Prolapse causes a mid-systolic click and late systolic murmur. It is not associated with fever, elevated inflammatory markers, skin rashes, or migratory arthritis. MVP does not cause a Carey Coombs mid-diastolic murmur. Post-streptococcal presentation argues strongly against MVP.',
       '✗ Dilated cardiomyopathy causes global LV dysfunction with MR from annular dilatation. It does not present with migratory arthritis, skin rashes, chorea, or post-streptococcal timing. DCM does not cause a Carey Coombs murmur. This is an inflammatory/immune-mediated syndrome.',
@@ -1050,14 +1045,14 @@ const CASES = [
       { name: 'SpO2', val: '99%' },
       { name: 'Pulse', val: 'Slow rising, low volume' },
     ],
-    narrative: 'A 38-year-old man presents with two episodes of syncope on exertion and increasing exertional dyspnoea over 12 months. He has a known bicuspid aortic valve from childhood. His pulse character is abnormal. He is an office worker who has avoided the PCP for years.',
+    narrative: 'A 38-year-old man presents with two episodes of syncope on exertion and increasing exertional Dyspnea over 12 months. He has a known bicuspid aortic valve from childhood. His pulse character is abnormal. He is an office worker who has avoided the PCP for years.',
     findings: [
       { label: 'Pulse', val: 'Slow-rising, plateau character (pulsus parvus et tardus)' },
       { label: 'Apex', val: 'Heaving, sustained, non-displaced' },
       { label: 'Carotid', val: 'Narrow volume, slow upstroke' },
       { label: 'S2', val: 'Soft, single (fused A2/P2)' },
     ],
-    murmur: 'Harsh ejection systolic murmur, grade 4/6, crescendo-decrescendo at the right second intercostal space. Radiates prominently to both carotids. Associated systolic thrill. Ejection click heard early in systole.',
+    murmur: 'Harsh crescendo-decrescendo ejection systolic murmur at the right upper sternal border. Radiates to both carotids. Palpable thrill.',
     waveformType: 'ejection',
     audioType: 'ejection-harsh',
     audioLabel: 'Harsh Late-Peaking Ejection Murmur (Severe AS)',
@@ -1074,10 +1069,10 @@ const CASES = [
       'Pulmonary Stenosis',
       'Mitral Regurgitation',
     ],
-    explanation: 'Severe aortic stenosis presents with the classic triad: syncope, angina, and dyspnoea. Once symptoms develop, prognosis is poor without intervention (mean survival: 2–3 years with syncope). The murmur is an ejection systolic crescendo-decrescendo at the aortic area, radiating to the carotids. Pulsus parvus et tardus (slow-rising, small-volume pulse) reflects reduced cardiac output across the fixed obstruction. A bicuspid aortic valve is the most common cause of AS in adults under 65. Treatment: TAVI or surgical AVR.',
+    explanation: 'Severe aortic stenosis presents with the classic triad: syncope, angina, and Dyspnea. Once symptoms develop, prognosis is poor without intervention (mean survival: 2–3 years with syncope). The murmur is an ejection systolic crescendo-decrescendo at the aortic area, radiating to the carotids. Pulsus parvus et tardus (slow-rising, small-volume pulse) reflects reduced cardiac output across the fixed obstruction. A bicuspid aortic valve is the most common cause of AS in adults under 65. Treatment: TAVI or surgical AVR.',
     pearl: '💎 Pearl: As AS worsens, the murmur peaks LATER in systole (approaches S2). When AS is severe enough to cause LV failure, flow decreases and the murmur may paradoxically become SOFTER — a quiet murmur in a patient with known AS is worrying.',
     optionExplanations: [
-      '✓ CORRECT — Severe AS presents with the classic triad of syncope, angina, dyspnoea. The ejection systolic murmur at the right upper sternal border radiating to carotids, combined with pulsus parvus et tardus and a heaving non-displaced apex, is diagnostic. Bicuspid AV is the most common cause under 65.',
+      '✓ CORRECT — Severe AS presents with the classic triad of syncope, angina, Dyspnea. The ejection systolic murmur at the right upper sternal border radiating to carotids, combined with pulsus parvus et tardus and a heaving non-displaced apex, is diagnostic. Bicuspid AV is the most common cause under 65.',
       '✗ HOCM causes a dynamic murmur that increases with Valsalva/standing and decreases with squatting. Pulsus parvus et tardus is not a feature of HOCM. HOCM murmurs typically radiate to the apex, not prominently to the carotids. HOCM often presents with family history.',
       '✗ Pulmonary stenosis causes an ejection systolic murmur at the left upper sternal border (not right). It does not radiate to the carotids or produce pulsus parvus et tardus. PS syncope is uncommon and PS does not cause the heaving sustained apex of severe AS.',
       '✗ Mitral regurgitation causes a pansystolic murmur at the apex radiating to the axilla — not an ejection systolic murmur at the RUSB. MR does not cause pulsus parvus et tardus. A heaving non-displaced apex suggests LVH (pressure overload from AS, not volume overload from MR).',
@@ -1104,9 +1099,8 @@ const CASES = [
       { label: 'S1/S2', val: 'Normal, possible S3 (normal in pregnancy)' },
       { label: 'Murmur Character', val: 'Louder lying supine; diminishes on standing & Valsalva' },
       { label: 'Veins', val: 'Venous hum in neck (normal pregnancy finding)' },
-      { label: 'Echo', val: 'Normal LV function, no valve pathology' },
     ],
-    murmur: 'Soft mid-systolic murmur, grade 1–2/6, at the left sternal edge and pulmonary area. Musical quality. No radiation. Louder lying supine; diminishes with standing or Valsalva.',
+    murmur: 'Soft mid-systolic murmur at the left sternal edge. Louder supine; diminishes with standing.',
     waveformType: 'soft',
     audioType: 'soft',
     audioLabel: 'Soft Physiological Flow Murmur (Pregnancy)',
@@ -1123,7 +1117,7 @@ const CASES = [
       'Pulmonary Stenosis',
     ],
     explanation: 'Physiological murmurs occur in up to 80% of pregnancies due to the hyperdynamic circulation — increased blood volume (40–50%), cardiac output, and heart rate reduce blood viscosity and velocity, producing turbulent flow. These murmurs are soft, systolic, left sternal edge, and change with position and respiration. S3 and venous hums are also normal findings in pregnancy. The key is distinguishing from pathological murmurs: diastolic murmurs, loud murmurs with radiation, or associated symptoms should prompt echocardiography.',
-    pearl: '💎 Pearl: Normal pregnancy changes that mimic pathology: flow murmur (80%), S3 (80%), displaced apex (cardiac enlargement), tachycardia, oedema. Pathological red flags in pregnancy: any diastolic murmur, pansystolic murmur grade ≥3, cyanosis, or signs of Eisenmenger syndrome.',
+    pearl: '💎 Pearl: Normal pregnancy changes that mimic pathology: flow murmur (80%), S3 (80%), displaced apex (cardiac enlargement), tachycardia, Edema. Pathological red flags in pregnancy: any diastolic murmur, pansystolic murmur grade ≥3, cyanosis, or signs of Eisenmenger syndrome.',
     optionExplanations: [
       '✗ ASD would be present before pregnancy, not newly develop because of it. ASD produces fixed S2 splitting, not a positional murmur. A previously undiagnosed ASD is possible, but the murmur disappearing on deep inspiration and normal echo makes this very unlikely in this case.',
       '✓ CORRECT — Physiological murmurs occur in up to 80% of pregnancies due to hyperdynamic circulation (increased CO, reduced viscosity, volume expansion). Key features: soft, systolic, positional, changes with respiration, and normal echo. No intervention needed — reassurance is appropriate.',
@@ -1147,14 +1141,13 @@ const CASES = [
       { name: 'BP', val: '94/56 mmHg' },
       { name: 'SpO2', val: '94%' },
     ],
-    narrative: 'A 45-year-old male with a history of intravenous drug use presents with 2 weeks of fevers, rigors, and dyspnoea. He has multiple track marks. His blood cultures taken on admission grow Staphylococcus aureus. He has splinter haemorrhages and Janeway lesions.',
+    narrative: 'A 45-year-old male with a history of intravenous drug use presents with 2 weeks of fevers, rigors, and Dyspnea. He has multiple track marks. His blood cultures taken on admission grow Staphylococcus aureus. He has splinter haemorrhages and Janeway lesions.',
     findings: [
       { label: 'Hands', val: 'Splinter haemorrhages, Osler\'s nodes, clubbing' },
       { label: 'Eyes', val: 'Roth spots on fundoscopy' },
       { label: 'Feet', val: 'Janeway lesions (palms/soles)' },
-      { label: 'Echo (TOE)', val: 'Tricuspid valve vegetation 1.8cm' },
     ],
-    murmur: 'Pansystolic murmur loudest at the left lower sternal border, increasing with inspiration (Carvallo\'s sign). Right-sided features: raised JVP, hepatomegaly, peripheral oedema.',
+    murmur: 'Pansystolic murmur at the left lower sternal border. Increases with inspiration (Carvallo\'s sign).',
     waveformType: 'pansystolic',
     audioType: 'pansystolic',
     audioLabel: 'Pansystolic Murmur — TR (Infective Endocarditis)',
@@ -1170,10 +1163,10 @@ const CASES = [
       'Tricuspid Regurgitation (Infective Endocarditis)',
       'Pulmonary Regurgitation',
     ],
-    explanation: 'Right-sided infective endocarditis affects the tricuspid valve and is strongly associated with IV drug use (Staph aureus inoculated directly into venous circulation). TR produces a pansystolic murmur at the lower left sternal border that increases on inspiration (Carvallo\'s sign) — inspiration increases right heart filling and flow. Right heart failure features (raised JVP, pulsatile hepatomegaly, peripheral oedema) predominate. Septic pulmonary emboli cause multiple cavitating lung lesions. Treatment: 4–6 weeks of IV antibiotics; surgery for large vegetations or valve failure.',
+    explanation: 'Right-sided infective endocarditis affects the tricuspid valve and is strongly associated with IV drug use (Staph aureus inoculated directly into venous circulation). TR produces a pansystolic murmur at the lower left sternal border that increases on inspiration (Carvallo\'s sign) — inspiration increases right heart filling and flow. Right heart failure features (raised JVP, pulsatile hepatomegaly, peripheral Edema) predominate. Septic pulmonary emboli cause multiple cavitating lung lesions. Treatment: 4–6 weeks of IV antibiotics; surgery for large vegetations or valve failure.',
     pearl: '💎 Pearl: Carvallo\'s sign — a right-sided murmur increases on inspiration (more venous return to right heart). Left-sided murmurs typically decrease on inspiration. This simple bedside manoeuvre differentiates TR from MR.',
     optionExplanations: [
-      '✗ Mitral regurgitation causes a pansystolic murmur at the apex radiating to the left axilla. MR murmurs decrease on inspiration (Carvallo\'s sign negative). MR causes left heart failure features (pulmonary oedema, orthopnoea) — not the right heart failure seen here (raised JVP, hepatomegaly).',
+      '✗ Mitral regurgitation causes a pansystolic murmur at the apex radiating to the left axilla. MR murmurs decrease on inspiration (Carvallo\'s sign negative). MR causes left heart failure features (pulmonary Edema, orthopnoea) — not the right heart failure seen here (raised JVP, hepatomegaly).',
       '✗ Aortic regurgitation causes an early diastolic decrescendo murmur at the left sternal edge — not a pansystolic murmur. AR is associated with peripheral signs (collapsing pulse, Corrigan\'s, Quincke\'s). AR would not explain right heart failure in this context.',
       '✓ CORRECT — IV drug use → Staph aureus bacteraemia → right-sided IE affecting tricuspid valve. TR produces a pansystolic murmur at LLSB that increases on inspiration (Carvallo\'s sign positive). Right heart failure features + septic pulmonary emboli (cavitating lesions) confirm right-sided IE.',
       '✗ Pulmonary regurgitation produces an early diastolic murmur at the LUSB (Graham Steell if secondary to PH). It is not a pansystolic murmur. PR alone does not cause the clinical picture described — the septic emboli and Staph bacteraemia point firmly to TR from IE.',
@@ -1195,14 +1188,14 @@ const CASES = [
       { name: 'SpO2', val: '95%' },
       { name: 'Pulse', val: 'Collapsing quality' },
     ],
-    narrative: 'A 52-year-old woman presents with progressive exertional dyspnoea and orthopnoea. She had rheumatic fever as a child (growing up in Bangladesh). Her pulse has a distinctive character. She has signs of pulmonary hypertension on examination.',
+    narrative: 'A 52-year-old woman presents with progressive exertional Dyspnea and orthopnoea. She had rheumatic fever as a child (growing up in Bangladesh). Her pulse has a distinctive character. She has signs of pulmonary hypertension on examination.',
     findings: [
       { label: 'Pulse', val: 'Collapsing ("waterhammer") pulse' },
       { label: 'Apex', val: 'Hyperdynamic, displaced to 6th ICS, AAL' },
       { label: 'Corrigan\'s', val: 'Visible carotid pulsations in neck' },
       { label: 'Quincke\'s', val: 'Visible nail bed capillary pulsation' },
     ],
-    murmur: 'Early decrescendo diastolic murmur at the left sternal edge (3rd ICS), heard best with patient sitting forward, in full expiration. Austin Flint murmur (soft mid-diastolic) at the apex.',
+    murmur: 'Early diastolic decrescendo murmur at the left sternal edge (3rd ICS). Austin Flint murmur at the apex.',
     waveformType: 'diastolic',
     audioType: 'diastolic-early',
     audioLabel: 'Early Diastolic Decrescendo + Austin Flint (AR)',
@@ -1250,7 +1243,7 @@ const CASES = [
       { label: 'P2', val: 'Loud, palpable' },
       { label: 'Opening Snap', val: 'Present after S2, close interval' },
     ],
-    murmur: 'Low-pitched rumbling mid-diastolic murmur with presystolic accentuation (absent in AF). Best heard at the apex with the bell of the stethoscope, patient in left lateral decubitus position. Loud S1.',
+    murmur: 'Low-pitched rumbling mid-diastolic murmur at the apex. Loud S1. Bell, left lateral decubitus position.',
     waveformType: 'diastolic',
     audioType: 'diastolic-mid-rumble',
     audioLabel: 'Mid-Diastolic Rumble + Opening Snap (Mitral Stenosis)',
@@ -1290,14 +1283,13 @@ const CASES = [
       { name: 'BP', val: '102/70 mmHg' },
       { name: 'JVP', val: 'Elevated 6cm above sternal angle' },
     ],
-    narrative: 'A 48-year-old HIV-positive woman presents with progressive dyspnoea and peripheral oedema. She has no history of rheumatic fever or IV drug use. She has a loud P2, elevated JVP, and signs of right heart failure. Her echo shows severely dilated RV.',
+    narrative: 'A 48-year-old HIV-positive woman presents with progressive Dyspnea and peripheral Edema. She has no history of rheumatic fever or IV drug use. She has a loud P2, elevated JVP, and signs of right heart failure. Her echo shows severely dilated RV.',
     findings: [
       { label: 'P2', val: 'Loud, palpable in pulmonary area' },
       { label: 'RV', val: 'Right parasternal heave' },
       { label: 'JVP', val: 'Elevated with prominent V waves' },
-      { label: 'Echo', val: 'Severely elevated RVSP 78 mmHg, dilated RV' },
     ],
-    murmur: 'Soft early diastolic decrescendo murmur at the left upper sternal border (pulmonary area), increasing with inspiration. Graham Steell murmur. Associated pansystolic TR murmur at LLSB.',
+    murmur: 'Early diastolic decrescendo murmur at the pulmonary area (Graham Steell). Pansystolic TR murmur also at the LLSB.',
     waveformType: 'diastolic',
     audioType: 'diastolic-early',
     audioLabel: 'Graham Steell Murmur — Pulmonary Regurgitation (PH)',
@@ -1338,14 +1330,12 @@ const CASES = [
       { name: 'SpO2', val: '97%' },
       { name: 'Pulse', val: 'Slow-rising, parvus et tardus' },
     ],
-    narrative: 'A 76-year-old retired engineer presents with two syncopal episodes, angina on minimal exertion, and breathlessness on climbing stairs. He has a 10-year history of an aortic murmur that has "become louder." He has hypertension and hypercholesterolaemia. His echo shows AVA 0.7 cm².',
+    narrative: 'A 76-year-old retired engineer presents with two syncopal episodes, angina on minimal exertion, and breathlessness on climbing stairs. He has a 10-year history of an aortic murmur that has "become louder." He has hypertension and hypercholesterolaemia.',
     findings: [
       { label: 'Murmur', val: 'Grade 4/6, peaking late in systole' },
-      { label: 'Aortic Valve Area', val: '0.7 cm² (severe <1.0 cm²)' },
-      { label: 'Mean gradient', val: '52 mmHg (severe >40 mmHg)' },
-      { label: 'LVH', val: 'Concentric LVH on echo' },
+      { label: 'LVH', val: 'Concentric LVH' },
     ],
-    murmur: 'Harsh, late-peaking ejection systolic murmur grade 4/6, right 2nd intercostal space, radiating to both carotids. Soft A2. No ejection click (calcific/immobile valve). Reversed splitting of S2.',
+    murmur: 'Harsh late-peaking ejection systolic murmur at the right upper sternal border. Radiates to both carotids. Soft A2. Reversed S2 splitting.',
     waveformType: 'ejection',
     audioType: 'ejection-harsh',
     audioLabel: 'Harsh Late-Peaking ESM — Calcific AS (Elderly)',
@@ -1366,7 +1356,7 @@ const CASES = [
     optionExplanations: [
       '✗ HOCM causes a dynamic murmur that increases with Valsalva and standing. It typically presents in younger patients with family history of SCD. HOCM does not cause reversed S2 splitting or the calcific valve appearance on echo. An AVA of 0.7 cm² with a 52 mmHg gradient is diagnostic of fixed obstruction.',
       '✗ Aortic sclerosis produces a soft ejection systolic murmur WITHOUT haemodynamic obstruction — no significant gradient, normal AVA, normal pulse, and no symptoms. This patient has severe symptoms, AVA 0.7 cm², and gradient 52 mmHg — this is stenosis, not sclerosis.',
-      '✓ CORRECT — Severe calcific AS (AVA <1.0 cm², mean gradient >40 mmHg) with the classic triad of syncope, angina, and dyspnoea. Late-peaking harsh murmur, pulsus parvus et tardus, soft A2, and reversed S2 splitting all confirm severity. TAVI is first-line in elderly patients.',
+      '✓ CORRECT — Severe calcific AS (AVA <1.0 cm², mean gradient >40 mmHg) with the classic triad of syncope, angina, and Dyspnea. Late-peaking harsh murmur, pulsus parvus et tardus, soft A2, and reversed S2 splitting all confirm severity. TAVI is first-line in elderly patients.',
       '✗ Pulmonary stenosis causes a murmur at the left upper sternal border — not the right 2nd ICS. PS does not produce pulsus parvus et tardus, carotid radiation, or reversed S2 splitting. PS is usually congenital and presents earlier in life, not as degenerative disease in the elderly.',
     ],
   },
@@ -1384,16 +1374,15 @@ const CASES = [
       { name: 'HR', val: '88 bpm (AF)' },
       { name: 'BP', val: '112/72 mmHg' },
       { name: 'SpO2', val: '94%' },
-      { name: 'Echo', val: 'EF 40%, dilated LA & LV' },
     ],
-    narrative: 'A 72-year-old woman with a 20-year history of "a leaky valve" presents with worsening dyspnoea and a new reduced exercise tolerance. She is in AF. Her LV function has declined on recent echo. She has longstanding mitral valve regurgitation of rheumatic origin.',
+    narrative: 'A 72-year-old woman with a 20-year history of "a leaky valve" presents with worsening Dyspnea and a new reduced exercise tolerance. She is in AF. Her LV function has declined on recent echo. She has longstanding mitral valve regurgitation of rheumatic origin.',
     findings: [
       { label: 'Apex', val: 'Displaced to 6th ICS, anterior axillary line' },
       { label: 'S1', val: 'Soft (leaflets fail to coapt)' },
       { label: 'S3', val: 'Present (volume overload)' },
       { label: 'AF', val: 'Irregularly irregular rhythm throughout' },
     ],
-    murmur: 'Harsh pansystolic murmur, grade 4/6 at the apex, radiating to the left axilla and inferior angle of left scapula. High-pitched, blowing quality. Overshadows S1.',
+    murmur: 'Harsh pansystolic murmur at the apex radiating to the left axilla. Soft S1.',
     waveformType: 'pansystolic',
     audioType: 'pansystolic',
     audioLabel: 'Harsh Apical Pansystolic Murmur (Chronic MR)',
@@ -1438,10 +1427,9 @@ const CASES = [
     findings: [
       { label: 'Onset', val: 'New murmur post-MI (4 days)' },
       { label: 'Haemodynamics', val: 'Cardiogenic shock, not improving post-PCI' },
-      { label: 'Echo', val: 'Flail leaflet posterior MV, severe MR, defect VIV septum' },
-      { label: 'CXR', val: 'Acute pulmonary oedema' },
+      { label: 'CXR', val: 'Acute pulmonary Edema' },
     ],
-    murmur: 'New, harsh pansystolic murmur at the apex OR left lower sternal border, post-MI in a shocked patient. Loud, grade 5/6, with a thrill.',
+    murmur: 'New harsh pansystolic murmur at the apex or left lower sternal border. Grade 5/6 with a palpable thrill.',
     waveformType: 'pansystolic',
     audioType: 'pansystolic',
     audioLabel: 'New Loud Pansystolic Murmur Post-MI (Mechanical Complication)',
@@ -1457,7 +1445,7 @@ const CASES = [
       'Pulmonary Embolism',
       'Post-MI Mechanical Complication (Acute MR or VSD)',
     ],
-    explanation: 'A new loud murmur in a post-MI patient with cardiogenic shock = mechanical complication until proven otherwise. Two catastrophic complications: (1) Acute Mitral Regurgitation — papillary muscle rupture (posterior papillary from RCA territory), causing flail leaflet and severe acute MR; (2) Ventricular Septal Rupture — causes a step-up in O₂ saturation in the RV (detectable on Swan-Ganz), with a harsh pansystolic murmur at the LLSB. Both cause acute pulmonary oedema and cardiogenic shock. Both require urgent surgical repair. Without surgery, mortality approaches 100%.',
+    explanation: 'A new loud murmur in a post-MI patient with cardiogenic shock = mechanical complication until proven otherwise. Two catastrophic complications: (1) Acute Mitral Regurgitation — papillary muscle rupture (posterior papillary from RCA territory), causing flail leaflet and severe acute MR; (2) Ventricular Septal Rupture — causes a step-up in O₂ saturation in the RV (detectable on Swan-Ganz), with a harsh pansystolic murmur at the LLSB. Both cause acute pulmonary Edema and cardiogenic shock. Both require urgent surgical repair. Without surgery, mortality approaches 100%.',
     pearl: '💎 Pearl: Distinguish acute MR from VSD post-MI: acute MR = apical murmur ± radiation to axilla; VSD = murmur at LLSB with palpable thrill and step-up in RV O₂ sat on catheterisation. Swan-Ganz catheter is diagnostic. Both are surgical emergencies.',
     optionExplanations: [
       '✗ Pre-existing MR would not present as a NEW murmur post-PCI and would not explain haemodynamic deterioration in a previously well patient. Cardiogenic shock from pre-existing MR would have presented before the MI. A new murmur post-MI always demands urgent investigation for mechanical complications.',
@@ -1482,14 +1470,14 @@ const CASES = [
       { name: 'SpO2', val: '97%' },
       { name: 'Holter', val: 'Complete heart block on 24hr tape' },
     ],
-    narrative: 'An 81-year-old woman presents with recurrent dizziness, pre-syncope, and two falls over the past 3 months. She has no chest pain. Her pulse is slow and regular. Holter monitoring confirms complete (3rd degree) heart block. Echocardiography shows moderate calcific aortic stenosis and mitral annular calcification.',
+    narrative: 'An 81-year-old woman presents with recurrent dizziness, pre-syncope, and two falls over the past 3 months. She has no chest pain. Her pulse is slow and regular. Holter monitoring confirms complete (3rd degree) heart block. Moderate calcific aortic stenosis and mitral annular calcification are present.',
     findings: [
       { label: 'Rhythm', val: 'Complete heart block: rate 44, dissociated P & QRS' },
       { label: 'Cannon Waves', val: 'Intermittent cannon A-waves in JVP' },
       { label: 'S1', val: 'Variable intensity (AV dissociation)' },
       { label: 'Cause', val: 'Fibrocalcific disease extending to the conduction system' },
     ],
-    murmur: 'Variable intensity systolic murmur at right sternal edge (calcific AS, moderate). Murmur intensity varies beat-to-beat due to AV dissociation affecting filling and contractility.',
+    murmur: 'Variable intensity systolic murmur at the right sternal border. Beat-to-beat variation from AV dissociation.',
     waveformType: 'ejection',
     audioType: 'ejection',
     audioLabel: 'Variable Ejection Murmur — Calcific AS + CHB (Lev\'s)',
@@ -1530,14 +1518,13 @@ const CASES = [
       { name: 'SpO2', val: '97%' },
       { name: 'Cholesterol', val: '6.2 mmol/L' },
     ],
-    narrative: 'A 79-year-old man attends his annual review. He has hypertension, type 2 diabetes, and hypercholesterolaemia. He is asymptomatic. His PCP has noted a systolic murmur at the right sternal edge for the past 5 years, unchanged. He has no exertional symptoms, no syncope, no dyspnoea.',
+    narrative: 'A 79-year-old man attends his annual review. He has hypertension, type 2 diabetes, and hypercholesterolaemia. He is asymptomatic. His PCP has noted a systolic murmur at the right sternal edge for the past 5 years, unchanged. He has no exertional symptoms, no syncope, no Dyspnea.',
     findings: [
       { label: 'Pulse', val: 'Normal volume, normal upstroke' },
       { label: 'S2', val: 'Normal intensity, normal splitting' },
-      { label: 'Murmur gradient', val: 'No significant gradient on echo' },
       { label: 'Valve area', val: 'Normal (2.8 cm²)' },
     ],
-    murmur: 'Soft ejection systolic murmur, grade 2/6, at right upper sternal border. Short, early-peaking. No radiation to carotids. No thrill. Normal S2. No symptoms.',
+    murmur: 'Soft early-peaking ejection systolic murmur at the right upper sternal border. No radiation or thrill. Normal S2.',
     waveformType: 'soft',
     audioType: 'soft',
     audioLabel: 'Soft Early-Peaking ESM — Aortic Sclerosis',
@@ -1555,7 +1542,7 @@ const CASES = [
     explanation: 'Aortic sclerosis is calcification and thickening of the aortic valve without significant obstruction. It is present in ~25% of adults over 65 and does not cause haemodynamic compromise. Unlike AS: normal S2, normal upstroke pulse, no symptoms, no significant gradient (<20mmHg), normal valve area. However, it is an independent predictor of cardiovascular events (atherosclerosis marker). No intervention is required, but risk factor management (statins, BP control) is important. Annual echo surveillance is appropriate to detect progression.',
     pearl: '💎 Pearl: Aortic sclerosis is NOT benign from a risk perspective — it is an independent marker for cardiovascular mortality (similar to a carotid bruit). Screen for and treat cardiovascular risk factors aggressively. Annual echo surveillance to watch for progression to stenosis.',
     optionExplanations: [
-      '✗ Severe aortic stenosis would present with the classic triad of syncope, angina, and dyspnoea. AVA would be <1.0 cm² with a mean gradient >40 mmHg, and the pulse would be slow-rising. This patient is completely asymptomatic with normal echo findings — severe AS is excluded.',
+      '✗ Severe aortic stenosis would present with the classic triad of syncope, angina, and Dyspnea. AVA would be <1.0 cm² with a mean gradient >40 mmHg, and the pulse would be slow-rising. This patient is completely asymptomatic with normal echo findings — severe AS is excluded.',
       '✗ HOCM causes a dynamic late systolic murmur at the lower left sternal border that increases with Valsalva. It does not produce a soft, early-peaking murmur at the right sternal border. HOCM would be unusual as a new presentation at 79 without prior history or symptoms.',
       '✗ Pulmonary stenosis causes a murmur at the left upper sternal border — not the right. PS is congenital and would have been diagnosed in childhood. PS is not a diagnosis to consider in a 79-year-old with cardiovascular risk factors and an incidental right-sided murmur.',
       '✓ CORRECT — Aortic sclerosis is thickening of the AV without obstruction. Normal S2, normal upstroke pulse, asymptomatic, no significant gradient, normal valve area — all consistent. The murmur is a common incidental finding in elderly patients. Annual echo surveillance and aggressive cardiovascular risk factor management are appropriate.',
@@ -1875,10 +1862,6 @@ function fillCaseCard(c) {
   document.getElementById('patient-name').textContent = c.name;
   document.getElementById('patient-meta').textContent = c.meta;
   document.getElementById('case-narrative').textContent = c.narrative;
-  const pips = document.getElementById('diff-pips');
-  pips.innerHTML = '';
-  for (let i=1;i<=3;i++) { const p=document.createElement('div'); p.className='diff-pip'+(i<=c.difficulty?' on':''); pips.appendChild(p); }
-  document.getElementById('diff-label').textContent = ['','EASY','MODERATE','HARD'][c.difficulty];
   document.getElementById('vitals-bar').innerHTML = c.vitals.map(v=>`<div class="vital"><div class="vital-name">${v.name}</div><div class="vital-val">${v.val}</div></div>`).join('');
   document.getElementById('findings-grid').innerHTML = c.findings.map(f=>`<div class="finding"><div class="finding-label">${f.label}</div><div class="finding-val">${f.val}</div></div>`).join('');
   document.getElementById('murmur-desc').textContent = c.murmur;
@@ -2013,7 +1996,9 @@ function peekOption(idx, c) {
   document.getElementById('feedback-result').textContent = isCorrectOpt ? `✓ OPTION ${['A','B','C','D'][idx]} — CORRECT` : `✗ OPTION ${['A','B','C','D'][idx]} — INCORRECT`;
   document.getElementById('feedback-result').className = 'feedback-result ' + (isCorrectOpt ? 'correct-text' : 'wrong-text');
   document.getElementById('feedback-explanation').textContent = c.optionExplanations ? c.optionExplanations[idx] : c.explanation;
-  document.getElementById('feedback-pearl').textContent = c.pearl;
+  const pearlEl2 = document.getElementById('feedback-pearl');
+  pearlEl2.textContent = isCorrectOpt ? c.pearl : '';
+  pearlEl2.style.display = isCorrectOpt ? '' : 'none';
 }
 
 function showFeedback(isCorrect, c) {
@@ -2023,7 +2008,9 @@ function showFeedback(isCorrect, c) {
   document.getElementById('feedback-result').textContent = isCorrect ? '✓ CORRECT' : (saved && saved.timedOut ? '⏱ TIME EXPIRED' : '✗ INCORRECT');
   document.getElementById('feedback-result').className = 'feedback-result ' + (isCorrect ? 'correct-text' : 'wrong-text');
   document.getElementById('feedback-explanation').textContent = c.explanation;
-  document.getElementById('feedback-pearl').textContent = c.pearl;
+  const pearlEl = document.getElementById('feedback-pearl');
+  pearlEl.textContent = isCorrect ? c.pearl : '';
+  pearlEl.style.display = isCorrect ? '' : 'none';
 }
 
 // Navigate solo
